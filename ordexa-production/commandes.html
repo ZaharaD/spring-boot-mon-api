@@ -640,6 +640,12 @@
               Exporter CSV
             </button>
           </div>
+          <div class="filter-group">
+            <button class="btn btn-primary" onclick="resetData()">
+              <i class="fa-solid fa-refresh"></i>
+              Charger données test
+            </button>
+          </div>
         </div>
       </div>
 
@@ -879,11 +885,13 @@
       if (storedCommandes) {
         commandesData = JSON.parse(storedCommandes);
       } else {
+        // Forcer l'initialisation des données de test
         commandesData = [...initialCommandesData];
         localStorage.setItem('commandes', JSON.stringify(commandesData));
       }
       updateStats();
       renderCommandes();
+      console.log('Commandes chargées:', commandesData.length); // Debug
     }
 
     // Fonction pour formater les nombres
@@ -1114,6 +1122,12 @@
     // Initialisation
     function initCommandes() {
       checkAuth();
+      
+      // Forcer l'initialisation des données si elles n'existent pas
+      if (!localStorage.getItem('commandes')) {
+        localStorage.setItem('commandes', JSON.stringify(initialCommandesData));
+      }
+      
       loadCommandes();
       
       // Initialiser la date par défaut
@@ -1216,6 +1230,17 @@
       setTimeout(() => {
         notification.remove();
       }, 3000);
+    }
+
+    // Fonction pour réinitialiser les données
+    function resetData() {
+      if (confirm('Voulez-vous réinitialiser toutes les données avec les données de test ?')) {
+        localStorage.removeItem('clients');
+        localStorage.removeItem('produits');
+        localStorage.removeItem('commandes');
+        loadCommandes();
+        showNotification('Données réinitialisées avec succès !');
+      }
     }
   </script>
 </body>

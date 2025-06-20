@@ -664,6 +664,12 @@
               Exporter CSV
             </button>
           </div>
+          <div class="filter-group">
+            <button class="btn btn-primary" onclick="resetData()">
+              <i class="fa-solid fa-refresh"></i>
+              Charger données test
+            </button>
+          </div>
         </div>
       </div>
 
@@ -860,11 +866,13 @@
       if (storedProduits) {
         produitsData = JSON.parse(storedProduits);
       } else {
+        // Forcer l'initialisation des données de test
         produitsData = [...initialProduitsData];
         localStorage.setItem('produits', JSON.stringify(produitsData));
       }
       updateStats();
       renderProduits();
+      console.log('Produits chargés:', produitsData.length); // Debug
     }
 
     // Fonction pour formater les nombres
@@ -1103,9 +1111,26 @@
       }, 3000);
     }
 
+    // Fonction pour réinitialiser les données
+    function resetData() {
+      if (confirm('Voulez-vous réinitialiser toutes les données avec les données de test ?')) {
+        localStorage.removeItem('clients');
+        localStorage.removeItem('produits');
+        localStorage.removeItem('commandes');
+        loadProduits();
+        showNotification('Données réinitialisées avec succès !');
+      }
+    }
+
     // Initialisation
     function initProduits() {
       checkAuth();
+      
+      // Forcer l'initialisation des données si elles n'existent pas
+      if (!localStorage.getItem('produits')) {
+        localStorage.setItem('produits', JSON.stringify(initialProduitsData));
+      }
+      
       loadProduits();
     }
 
