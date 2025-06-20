@@ -589,10 +589,12 @@
             <i class="fa-solid fa-home"></i>
             Tableau de bord
           </a>
-          <button class="btn" onclick="showModal('addClientModal')">
-            <i class="fa-solid fa-plus"></i>
-            Nouveau client
-          </button>
+          <div class="header-actions">
+            <button onclick="showAddClientModal()" class="btn btn-primary">
+              <i class="fa-solid fa-plus"></i>
+              Nouveau Client
+            </button>
+          </div>
         </div>
       </div>
 
@@ -643,36 +645,23 @@
         </h3>
         <div class="filters-content">
           <div class="filter-group">
-            <label>Rechercher :</label>
-            <input type="text" id="searchClient" class="form-control" placeholder="Nom, email, téléphone..." oninput="filterClients()">
-          </div>
-          <div class="filter-group">
-            <label>Statut :</label>
-            <select id="filterStatus" onchange="filterClients()">
+            <label for="statusFilter">Statut:</label>
+            <select id="statusFilter" onchange="filterClients()">
               <option value="">Tous</option>
+              <option value="actif">Actif</option>
               <option value="vip">VIP</option>
-              <option value="nouveau">Nouveau</option>
               <option value="premium">Premium</option>
+              <option value="nouveau">Nouveau</option>
             </select>
           </div>
           <div class="filter-group">
-            <label>Trier par :</label>
-            <select id="sortBy" onchange="sortClients()">
-              <option value="nom">Nom</option>
-              <option value="date">Date d'inscription</option>
-              <option value="commandes">Nombre de commandes</option>
-            </select>
+            <label for="searchInput">Rechercher:</label>
+            <input type="text" id="searchInput" placeholder="Nom, email, téléphone..." onkeyup="filterClients()">
           </div>
           <div class="filter-group">
             <button class="btn btn-secondary" onclick="exportToCSV()">
               <i class="fa-solid fa-download"></i>
               Exporter CSV
-            </button>
-          </div>
-          <div class="filter-group">
-            <button class="btn btn-primary" onclick="resetData()">
-              <i class="fa-solid fa-refresh"></i>
-              Charger données test
             </button>
           </div>
         </div>
@@ -1016,8 +1005,8 @@
 
     // Filtrage des clients
     function filterClients() {
-      const searchTerm = document.getElementById('searchClient').value.toLowerCase();
-      const statusFilter = document.getElementById('filterStatus').value;
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
 
       let filteredClients = clientsData.filter(client => {
         const matchesSearch = client.nom.toLowerCase().includes(searchTerm) ||

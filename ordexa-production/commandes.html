@@ -304,45 +304,79 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 1rem;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
     
     th, td {
-      padding: 1rem;
+      padding: 1.2rem 1rem;
       text-align: left;
       border-bottom: 1px solid var(--border);
     }
     
     th {
-      background: #f8f9fa;
-      color: var(--text-secondary);
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      color: var(--primary-dark);
       font-weight: 600;
       font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    tr {
+      transition: all 0.2s ease;
     }
     
     tr:hover {
-      background: #f8f9fa;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      transform: scale(1.01);
     }
     
+    tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* Status badges */
     .status {
-      padding: 0.3rem 0.8rem;
+      padding: 0.4rem 0.8rem;
       border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-block;
+      text-align: center;
+      min-width: 80px;
+      color: white;
+    }
+    
+    .status.livrée {
+      background: #10b981;
+    }
+    
+    .status.en-cours {
+      background: #f59e0b;
+    }
+    
+    .status.en-attente {
+      background: #6b7280;
+    }
+    
+    .status.annulée {
+      background: #ef4444;
     }
     
     .status.livree {
-      background: #dcfce7;
-      color: var(--success);
+      background: #10b981;
     }
     
     .status.encours {
-      background: #fef3c7;
-      color: var(--warning);
+      background: #f59e0b;
     }
     
     .status.annulee {
-      background: #fee2e2;
-      color: var(--danger);
+      background: #ef4444;
     }
     
     .order-actions {
@@ -350,44 +384,117 @@
       gap: 0.5rem;
     }
     
-    .btn {
-      padding: 0.5rem 1rem;
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .action-buttons button {
+      padding: 0.6rem 0.8rem;
       border: none;
-      border-radius: 6px;
-      font-size: 0.9rem;
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.2s;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
       display: flex;
       align-items: center;
-      gap: 0.3rem;
+      justify-content: center;
+      min-width: 36px;
+      height: 36px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .action-buttons button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .action-buttons button:active {
+      transform: translateY(0);
+    }
+    
+    .btn-edit {
+      background: linear-gradient(135deg, #f59e42 0%, #d97706 100%);
+      color: white;
+    }
+    
+    .btn-edit:hover {
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    }
+    
+    .btn-delete {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      color: white;
+    }
+    
+    .btn-delete:hover {
+      background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    }
+    
+    .btn-invoice {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      color: white;
+    }
+    
+    .btn-invoice:hover {
+      background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+    }
+    
+    .btn {
+      padding: 0.7rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       text-decoration: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
     }
     
     .btn-secondary {
-      background: #f3f4f6;
-      color: #374151;
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+      color: white;
     }
     
     .btn-secondary:hover {
-      background: #e5e7eb;
+      background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
     }
     
     .btn-primary {
-      background: var(--primary);
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
       color: white;
     }
     
     .btn-primary:hover {
-      background: var(--primary-dark);
+      background: linear-gradient(135deg, #3730a3 0%, #312e81 100%);
     }
     
     .btn-danger {
-      background: var(--danger);
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
       color: white;
     }
     
     .btn-danger:hover {
-      background: #b91c1c;
+      background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
     }
     
     /* Modal */
@@ -618,32 +725,22 @@
         </h3>
         <div class="filters-content">
           <div class="filter-group">
-            <label>Rechercher :</label>
-            <input type="text" id="searchOrder" class="form-control" placeholder="ID, client, produit..." oninput="filterOrders()">
-          </div>
-          <div class="filter-group">
-            <label>Statut :</label>
-            <select id="filterStatus" onchange="filterOrders()">
+            <label for="statusFilter">Statut:</label>
+            <select id="statusFilter" onchange="filterOrders()">
               <option value="">Tous</option>
-              <option value="livree">Livrées</option>
-              <option value="encours">En cours</option>
-              <option value="annulee">Annulées</option>
+              <option value="livrée">Livrée</option>
+              <option value="en cours">En cours</option>
+              <option value="en attente">En attente</option>
             </select>
           </div>
           <div class="filter-group">
-            <label>Date :</label>
-            <input type="date" id="filterDate" onchange="filterOrders()">
+            <label for="searchInput">Rechercher:</label>
+            <input type="text" id="searchInput" placeholder="N° commande, client..." onkeyup="filterOrders()">
           </div>
           <div class="filter-group">
             <button class="btn btn-secondary" onclick="exportToCSV()">
               <i class="fa-solid fa-download"></i>
               Exporter CSV
-            </button>
-          </div>
-          <div class="filter-group">
-            <button class="btn btn-primary" onclick="resetData()">
-              <i class="fa-solid fa-refresh"></i>
-              Charger données test
             </button>
           </div>
         </div>
@@ -653,14 +750,13 @@
       <div class="orders-table">
         <h3>
           <i class="fa-solid fa-list"></i>
-          Liste des commandes
+          Liste des Commandes
         </h3>
-        <table id="ordersTable">
+        <table>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>N° Commande</th>
               <th>Client</th>
-              <th>Date</th>
               <th>Produits</th>
               <th>Total</th>
               <th>Statut</th>
@@ -724,7 +820,7 @@
           </select>
           <small style="color: var(--text-secondary);">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs produits</small>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer" id="orderModalFooter">
           <button type="button" class="btn btn-secondary" onclick="hideModal('addOrderModal')">Annuler</button>
           <button type="submit" class="btn btn-primary">Enregistrer</button>
         </div>
@@ -944,10 +1040,12 @@
     }
 
     function deleteCommande(id) {
-      commandesData = commandesData.filter(c => c.id !== id);
-      saveCommandes();
-      renderCommandes();
-      showNotification('Commande supprimée avec succès!', 'success');
+      if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+        commandesData = commandesData.filter(o => o.id !== id);
+        localStorage.setItem('commandesData', JSON.stringify(commandesData));
+        updateStats();
+        renderCommandes();
+      }
     }
 
     function resetToTestData() {
@@ -977,8 +1075,12 @@
     function getStatusText(status) {
       const statusMap = {
         'livree': 'Livrée',
+        'livrée': 'Livrée',
         'encours': 'En cours',
-        'annulee': 'Annulée'
+        'en cours': 'En cours',
+        'annulee': 'Annulée',
+        'annulée': 'Annulée',
+        'en attente': 'En attente'
       };
       return statusMap[status] || status;
     }
@@ -997,54 +1099,52 @@
     }
 
     // Affichage des commandes
-    function renderCommandes(orders = commandesData) {
+    function renderCommandes() {
       const tbody = document.getElementById('ordersTableBody');
-      tbody.innerHTML = '';
-
-      orders.forEach(order => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${order.numero}</td>
-          <td>${order.client}</td>
-          <td>${formatDate(order.date)}</td>
-          <td>${order.produits?.map(p => p.nom).join(', ') || 'Aucun produit'}</td>
-          <td>${formatAmount(order.total)}</td>
-          <td><span class="badge ${order.statut}">${getStatusText(order.statut)}</span></td>
-          <td>
-            <div class="action-buttons">
-              <button class="btn btn-sm btn-primary" onclick="viewOrder(${order.id})" title="Voir">
-                <i class="fa-solid fa-eye"></i>
-              </button>
-              <button class="btn btn-sm btn-secondary" onclick="editOrder(${order.id})" title="Modifier">
-                <i class="fa-solid fa-edit"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" onclick="deleteOrder(${order.id})" title="Supprimer">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-              <button class="btn btn-sm btn-success" onclick="showInvoice(${order.id})" title="Facture">
-                <i class="fa-solid fa-file-invoice"></i>
-              </button>
-            </div>
-          </td>
+      if (commandesData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#666;padding:1rem;">Aucune commande trouvée</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = commandesData.map(commande => {
+        const statusClass = commande.statut.replace(/\s+/g, '-');
+        return `
+          <tr>
+            <td>${commande.numero}</td>
+            <td>${commande.client}</td>
+            <td>${commande.produits?.map(p => p.nom).join(', ') || 'Aucun produit'}</td>
+            <td>${formatAmount(commande.total)}</td>
+            <td><span class="status ${statusClass}">${getStatusText(commande.statut)}</span></td>
+            <td>
+              <div class="action-buttons">
+                <button onclick="editCommande(${commande.id})" class="btn-edit" title="Modifier">
+                  <i class="fa-solid fa-edit"></i>
+                </button>
+                <button onclick="deleteCommande(${commande.id})" class="btn-delete" title="Supprimer">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+                <button onclick="showInvoice(${commande.id})" class="btn-invoice" title="Facture">
+                  <i class="fa-solid fa-file-invoice"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
         `;
-        tbody.appendChild(row);
-      });
+      }).join('');
     }
 
     // Filtrage des commandes
     function filterOrders() {
-      const searchTerm = document.getElementById('searchOrder').value.toLowerCase();
-      const statusFilter = document.getElementById('filterStatus').value;
-      const dateFilter = document.getElementById('filterDate').value;
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
 
       let filteredOrders = commandesData.filter(order => {
         const matchesSearch = order.numero.toLowerCase().includes(searchTerm) ||
                             order.client.toLowerCase().includes(searchTerm) ||
                             (order.produits?.map(p => p.nom).join(', ') || '').toLowerCase().includes(searchTerm);
         const matchesStatus = !statusFilter || order.statut === statusFilter;
-        const matchesDate = !dateFilter || order.date === dateFilter;
         
-        return matchesSearch && matchesStatus && matchesDate;
+        return matchesSearch && matchesStatus;
       });
 
       renderCommandes(filteredOrders);
@@ -1059,6 +1159,8 @@
     function hideModal(modalId) {
       document.getElementById(modalId).classList.remove('active');
       document.getElementById('orderForm').reset();
+      const delBtn = document.getElementById('deleteOrderBtn');
+      if (delBtn) delBtn.remove();
     }
 
     // Chargement des données du formulaire
@@ -1101,15 +1203,7 @@
     }
 
     // Fonctions CRUD
-    function viewOrder(id) {
-      const order = commandesData.find(o => o.id === id);
-      if (order) {
-        const produits = order.produits?.map(p => p.nom).join(', ') || 'Aucun produit';
-        alert(`Détails de la commande ${order.numero}\nClient: ${order.client}\nDate: ${formatDate(order.date)}\nProduits: ${produits}\nTotal: ${formatAmount(order.total)}\nStatut: ${getStatusText(order.statut)}`);
-      }
-    }
-
-    function editOrder(id) {
+    function editCommande(id) {
       const order = commandesData.find(o => o.id === id);
       if (order) {
         document.getElementById('modalTitle').textContent = 'Modifier Commande';
@@ -1117,15 +1211,23 @@
         document.getElementById('orderDate').value = order.date;
         document.getElementById('orderStatus').value = order.statut;
         showModal('addOrderModal');
-      }
-    }
-
-    function deleteOrder(id) {
-      if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
-        commandesData = commandesData.filter(o => o.id !== id);
-        localStorage.setItem('commandesData', JSON.stringify(commandesData));
-        updateStats();
-        renderCommandes();
+        // Ajouter le bouton supprimer si pas déjà présent
+        const footer = document.getElementById('orderModalFooter');
+        if (!document.getElementById('deleteOrderBtn')) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn btn-danger';
+          btn.id = 'deleteOrderBtn';
+          btn.innerHTML = '<i class="fa-solid fa-trash"></i> Supprimer';
+          btn.style.marginRight = 'auto';
+          btn.onclick = function() {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+              deleteCommande(id);
+              hideModal('addOrderModal');
+            }
+          };
+          footer.insertBefore(btn, footer.firstChild);
+        }
       }
     }
 

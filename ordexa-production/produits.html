@@ -636,38 +636,24 @@
         </h3>
         <div class="filters-content">
           <div class="filter-group">
-            <label>Rechercher :</label>
-            <input type="text" id="searchProduct" class="form-control" placeholder="Nom, référence, type..." oninput="filterProducts()">
-          </div>
-          <div class="filter-group">
-            <label>Type :</label>
-            <select id="filterType" onchange="filterProducts()">
-              <option value="">Tous</option>
+            <label for="categoryFilter">Catégorie:</label>
+            <select id="categoryFilter" onchange="filterProducts()">
+              <option value="">Toutes</option>
+              <option value="Alimentation">Alimentation</option>
               <option value="Électronique">Électronique</option>
-              <option value="Accessoire">Accessoire</option>
-              <option value="Alimentaire">Alimentaire</option>
-              <option value="Vêtement">Vêtement</option>
+              <option value="Textile">Textile</option>
+              <option value="Construction">Construction</option>
+              <option value="Hygiène">Hygiène</option>
             </select>
           </div>
           <div class="filter-group">
-            <label>Statut :</label>
-            <select id="filterStatus" onchange="filterProducts()">
-              <option value="">Tous</option>
-              <option value="En stock">En stock</option>
-              <option value="Limité">Limité</option>
-              <option value="Rupture">Rupture</option>
-            </select>
+            <label for="searchInput">Rechercher:</label>
+            <input type="text" id="searchInput" placeholder="Nom, description..." onkeyup="filterProducts()">
           </div>
           <div class="filter-group">
             <button class="btn btn-secondary" onclick="exportToCSV()">
               <i class="fa-solid fa-download"></i>
               Exporter CSV
-            </button>
-          </div>
-          <div class="filter-group">
-            <button class="btn btn-primary" onclick="resetData()">
-              <i class="fa-solid fa-refresh"></i>
-              Charger données test
             </button>
           </div>
         </div>
@@ -913,6 +899,7 @@
       produitsData.push(newProduit);
       saveProduits();
       renderProduits();
+      updateStats();
       showNotification('Produit ajouté avec succès!', 'success');
     }
 
@@ -922,6 +909,7 @@
         produitsData[index] = { ...produitsData[index], ...updatedProduit };
         saveProduits();
         renderProduits();
+        updateStats();
         showNotification('Produit modifié avec succès!', 'success');
       }
     }
@@ -930,6 +918,7 @@
       produitsData = produitsData.filter(p => p.id !== id);
       saveProduits();
       renderProduits();
+      updateStats();
       showNotification('Produit supprimé avec succès!', 'success');
     }
 
@@ -937,6 +926,7 @@
       produitsData = [...initialProduitsData];
       saveProduits();
       renderProduits();
+      updateStats();
       showNotification('Données de test restaurées!', 'success');
     }
 
@@ -953,9 +943,9 @@
     // Fonction pour obtenir le statut en français
     function getStatusText(status) {
       const statusMap = {
-        'En stock': 'En stock',
-        'Limité': 'Limité',
-        'Rupture': 'Rupture'
+        'disponible': 'Disponible',
+        'limité': 'Limité',
+        'rupture': 'Rupture'
       };
       return statusMap[status] || status;
     }
@@ -964,9 +954,11 @@
     function getTypeIcon(type) {
       const iconMap = {
         'Électronique': 'fa-laptop',
-        'Accessoire': 'fa-gem',
-        'Alimentaire': 'fa-apple-alt',
-        'Vêtement': 'fa-tshirt'
+        'Alimentation': 'fa-apple-alt',
+        'Textile': 'fa-tshirt',
+        'Construction': 'fa-hammer',
+        'Hygiène': 'fa-soap',
+        'Autre': 'fa-box'
       };
       return iconMap[type] || 'fa-box';
     }
@@ -985,66 +977,129 @@
     }
 
     // Affichage des produits
-    function renderProduits(products = produitsData) {
+    function renderProduits() {
       const grid = document.getElementById('productsGrid');
-      grid.innerHTML = '';
-
-      products.forEach(product => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        card.innerHTML = `
-          <div class="product-image">
-            <img src="${product.image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=200&fit=crop'}" alt="${product.nom}">
-            <div class="product-overlay">
-              <span class="badge ${product.statut}">${getStatusText(product.statut)}</span>
+      if (produitsData.length === 0) {
+        grid.innerHTML = '<div style="text-align:center;color:#666;padding:2rem;grid-column:1/-1;">Aucun produit trouvé</div>';
+        return;
+      }
+      
+      grid.innerHTML = produitsData.map(produit => {
+        const statusClass = produit.statut.replace(/\s+/g, '-');
+        const stockClass = produit.stock > 50 ? 'enstock' : produit.stock > 10 ? 'limite' : 'rupture';
+        
+        return `
+          <div class="product-card">
+            <div class="product-header">
+              <div class="product-image">
+                <i class="fa-solid ${getTypeIcon(produit.categorie)}"></i>
+              </div>
+              <div class="product-info">
+                <h4>${produit.nom}</h4>
+                <p>${produit.categorie || 'Non catégorisé'}</p>
+                <p><strong>${formatAmount(produit.prix)}</strong></p>
+              </div>
             </div>
-          </div>
-          <div class="product-info">
-            <h4>${product.nom}</h4>
-            <p class="product-description">${product.description || 'Aucune description'}</p>
-            <div class="product-details">
-              <span class="price">${formatAmount(product.prix)}</span>
-              <span class="stock">Stock: ${product.stock}</span>
+            
+            <div class="product-badges">
+              <span class="badge ${stockClass}">${produit.stock} en stock</span>
+              <span class="badge ${statusClass}">${getStatusText(produit.statut)}</span>
             </div>
-            <div class="product-meta">
-              <span class="category">${product.categorie || 'Non catégorisé'}</span>
-              <span class="supplier">${product.fournisseur || 'Fournisseur inconnu'}</span>
+            
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+              ${produit.description || 'Aucune description disponible'}
+            </p>
+            
+            <div style="margin-bottom: 1rem; font-size: 0.9rem;">
+              <strong>Fournisseur:</strong> ${produit.fournisseur || 'Non spécifié'}
             </div>
-          </div>
-          <div class="product-actions">
-            <button class="btn btn-secondary" onclick="editProduct(${product.id})">
-              <i class="fa-solid fa-edit"></i>
-              Modifier
-            </button>
-            <button class="btn btn-primary" onclick="viewProduct(${product.id})">
-              <i class="fa-solid fa-eye"></i>
-              Voir
-            </button>
-            <button class="btn btn-danger" onclick="deleteProduct(${product.id})">
-              <i class="fa-solid fa-trash"></i>
-              Supprimer
-            </button>
+            
+            <div class="product-actions">
+              <button onclick="viewProduct(${produit.id})" class="btn btn-secondary">
+                <i class="fa-solid fa-eye"></i>
+                Voir
+              </button>
+              <button onclick="editProduct(${produit.id})" class="btn btn-primary">
+                <i class="fa-solid fa-edit"></i>
+                Modifier
+              </button>
+              <button onclick="deleteProduct(${produit.id})" class="btn btn-danger">
+                <i class="fa-solid fa-trash"></i>
+                Supprimer
+              </button>
+            </div>
           </div>
         `;
-        grid.appendChild(card);
-      });
+      }).join('');
     }
 
     // Filtrage des produits
     function filterProducts() {
-      const searchTerm = document.getElementById('searchProduct').value.toLowerCase();
-      const statusFilter = document.getElementById('filterStatus').value;
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const categoryFilter = document.getElementById('categoryFilter').value;
 
       let filteredProducts = produitsData.filter(product => {
         const matchesSearch = product.nom.toLowerCase().includes(searchTerm) ||
-                            (product.ref || '').toLowerCase().includes(searchTerm) ||
-                            (product.categorie || '').toLowerCase().includes(searchTerm);
-        const matchesStatus = !statusFilter || product.statut === statusFilter;
+                            (product.description || '').toLowerCase().includes(searchTerm);
+        const matchesCategory = !categoryFilter || product.categorie === categoryFilter;
         
-        return matchesSearch && matchesStatus;
+        return matchesSearch && matchesCategory;
       });
 
-      renderProduits(filteredProducts);
+      // Afficher les produits filtrés
+      const grid = document.getElementById('productsGrid');
+      if (filteredProducts.length === 0) {
+        grid.innerHTML = '<div style="text-align:center;color:#666;padding:2rem;grid-column:1/-1;">Aucun produit trouvé</div>';
+        return;
+      }
+      
+      grid.innerHTML = filteredProducts.map(produit => {
+        const statusClass = produit.statut.replace(/\s+/g, '-');
+        const stockClass = produit.stock > 50 ? 'enstock' : produit.stock > 10 ? 'limite' : 'rupture';
+        
+        return `
+          <div class="product-card">
+            <div class="product-header">
+              <div class="product-image">
+                <i class="fa-solid ${getTypeIcon(produit.categorie)}"></i>
+              </div>
+              <div class="product-info">
+                <h4>${produit.nom}</h4>
+                <p>${produit.categorie || 'Non catégorisé'}</p>
+                <p><strong>${formatAmount(produit.prix)}</strong></p>
+              </div>
+            </div>
+            
+            <div class="product-badges">
+              <span class="badge ${stockClass}">${produit.stock} en stock</span>
+              <span class="badge ${statusClass}">${getStatusText(produit.statut)}</span>
+            </div>
+            
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+              ${produit.description || 'Aucune description disponible'}
+            </p>
+            
+            <div style="margin-bottom: 1rem; font-size: 0.9rem;">
+              <strong>Fournisseur:</strong> ${produit.fournisseur || 'Non spécifié'}
+            </div>
+            
+            <div class="product-actions">
+              <button onclick="viewProduct(${produit.id})" class="btn btn-secondary">
+                <i class="fa-solid fa-eye"></i>
+                Voir
+              </button>
+              <button onclick="editProduct(${produit.id})" class="btn btn-primary">
+                <i class="fa-solid fa-edit"></i>
+                Modifier
+              </button>
+              <button onclick="deleteProduct(${produit.id})" class="btn btn-danger">
+                <i class="fa-solid fa-trash"></i>
+                Supprimer
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     // Fonctions modales

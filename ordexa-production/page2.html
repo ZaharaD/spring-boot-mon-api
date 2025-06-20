@@ -923,12 +923,38 @@
       await loadDashboardData();
     }
 
+    // Fonction pour formater les nombres
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    // Fonction pour formater les montants
+    function formatAmount(amount) {
+      return formatNumber(amount) + " FCFA";
+    }
+
+    // Fonction pour formater les dates
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-FR');
+    }
+
+    // Fonction pour obtenir le statut en français
+    function getStatusText(status) {
+      const statusMap = {
+        'livrée': 'Livrée',
+        'en cours': 'En cours',
+        'en attente': 'En attente',
+        'annulée': 'Annulée'
+      };
+      return statusMap[status] || status;
+    }
+
     // --- Graphique Ventes mensuelles ---
     function createSalesChart() {
       const ctx = document.getElementById('salesChart').getContext('2d');
-      // Données fictives pour 12 mois (en attendant l'API)
       const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-      const salesData = dashboardData.monthlySales || [210000, 185000, 240000, 260000, 300000, 320000, 350000, 370000, 340000, 310000, 280000, 295000];
+      const salesData = [210000, 185000, 240000, 260000, 300000, 320000, 350000, 370000, 340000, 310000, 280000, 295000];
       
       new Chart(ctx, {
         type: 'bar',
@@ -962,17 +988,15 @@
     // --- Graphique Répartition des commandes ---
     function createOrdersChart() {
       const ctx = document.getElementById('ordersChart').getContext('2d');
-      const statusLabels = ['Livrée', 'En cours', 'Annulée'];
-      const statusColors = ['#16a34a', '#f59e42', '#dc2626'];
+      const statusLabels = ['Livrée', 'En cours', 'En attente'];
+      const statusColors = ['#16a34a', '#f59e42', '#3b82f6'];
       const statusCounts = [0, 0, 0];
       
-      if (dashboardData.recentOrders) {
-        dashboardData.recentOrders.forEach(order => {
-          if(order.statut === 'livree') statusCounts[0]++;
-          else if(order.statut === 'encours') statusCounts[1]++;
-          else if(order.statut === 'annulee') statusCounts[2]++;
-        });
-      }
+      commandesData.forEach(order => {
+        if(order.statut === 'livrée') statusCounts[0]++;
+        else if(order.statut === 'en cours') statusCounts[1]++;
+        else if(order.statut === 'en attente') statusCounts[2]++;
+      });
       
       new Chart(ctx, {
         type: 'doughnut',
@@ -992,6 +1016,116 @@
           }
         }
       });
+    }
+
+    // Fonctions de gestion locale des données
+    function loadDashboardData() {
+      console.log('Chargement des données du dashboard depuis localStorage...');
+      
+      // Charger les clients
+      const storedClients = localStorage.getItem('clientsData');
+      if (storedClients) {
+        try {
+          clientsData = JSON.parse(storedClients);
+          console.log('Clients chargés:', clientsData.length);
+        } catch (e) {
+          console.error('Erreur lors du chargement des clients:', e);
+          clientsData = [...initialClientsData];
+          localStorage.setItem('clientsData', JSON.stringify(clientsData));
+        }
+      } else {
+        clientsData = [...initialClientsData];
+        localStorage.setItem('clientsData', JSON.stringify(clientsData));
+      }
+      
+      // Charger les produits
+      const storedProduits = localStorage.getItem('produitsData');
+      if (storedProduits) {
+        try {
+          produitsData = JSON.parse(storedProduits);
+          console.log('Produits chargés:', produitsData.length);
+        } catch (e) {
+          console.error('Erreur lors du chargement des produits:', e);
+          produitsData = [...initialProduitsData];
+          localStorage.setItem('produitsData', JSON.stringify(produitsData));
+        }
+      } else {
+        produitsData = [...initialProduitsData];
+        localStorage.setItem('produitsData', JSON.stringify(produitsData));
+      }
+      
+      // Charger les commandes
+      const storedCommandes = localStorage.getItem('commandesData');
+      if (storedCommandes) {
+        try {
+          commandesData = JSON.parse(storedCommandes);
+          console.log('Commandes chargées:', commandesData.length);
+        } catch (e) {
+          console.error('Erreur lors du chargement des commandes:', e);
+          commandesData = [...initialCommandesData];
+          localStorage.setItem('commandesData', JSON.stringify(commandesData));
+        }
+      } else {
+        commandesData = [...initialCommandesData];
+        localStorage.setItem('commandesData', JSON.stringify(commandesData));
+      }
+      
+      updateDashboard();
+    }
+
+    function updateDashboard() {
+      // Calculer les statistiques
+      const totalClients = clientsData.length;
+      const totalProduits = produitsData.length;
+      const totalCommandes = commandesData.length;
+      const totalCA = commandesData.reduce((sum, cmd) => sum + cmd.total, 0);
+      
+      // Mettre à jour les cartes de statistiques
+      document.getElementById('totalCommandes').textContent = formatNumber(totalCommandes);
+      document.getElementById('totalCA').textContent = formatAmount(totalCA);
+      document.getElementById('totalClients').textContent = formatNumber(totalClients);
+      document.getElementById('totalProduits').textContent = formatNumber(totalProduits);
+      
+      // Mettre à jour les tableaux
+      updateRecentOrders();
+      updatePopularProducts();
+      
+      // Créer les graphiques
+      createSalesChart();
+      createOrdersChart();
+    }
+
+    function updateRecentOrders() {
+      const tbody = document.getElementById('recentOrdersBody');
+      const recentOrders = commandesData
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5);
+      
+      tbody.innerHTML = recentOrders.map(order => `
+        <tr>
+          <td>${order.numero}</td>
+          <td>${order.client}</td>
+          <td>${formatDate(order.date)}</td>
+          <td>${formatAmount(order.total)}</td>
+          <td><span class="status ${order.statut}">${getStatusText(order.statut)}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function updatePopularProducts() {
+      const tbody = document.getElementById('popularProductsBody');
+      const popularProducts = produitsData
+        .sort((a, b) => b.stock - a.stock)
+        .slice(0, 5);
+      
+      tbody.innerHTML = popularProducts.map(product => `
+        <tr>
+          <td>${product.nom}</td>
+          <td>${formatAmount(product.prix)}</td>
+          <td>${product.stock}</td>
+          <td>${product.categorie}</td>
+        </tr>
+      `).join('');
     }
 
     // Chargement au démarrage

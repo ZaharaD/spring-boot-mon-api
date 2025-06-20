@@ -458,7 +458,7 @@
             <i class="fa-solid fa-cart-shopping"></i>
             Total Commandes
           </h3>
-          <div class="value" id="totalOrders">0</div>
+          <div class="value" id="total-orders">0</div>
           <div class="label">Nombre total de commandes</div>
         </div>
         
@@ -467,7 +467,7 @@
             <i class="fa-solid fa-money-bill-wave"></i>
             Chiffre d'affaires
           </h3>
-          <div class="value" id="totalRevenue">0 FCFA</div>
+          <div class="value" id="total-revenue">0 FCFA</div>
           <div class="label">Revenus totaux</div>
         </div>
         
@@ -476,7 +476,7 @@
             <i class="fa-solid fa-users"></i>
             Clients actifs
           </h3>
-          <div class="value" id="activeClients">0</div>
+          <div class="value" id="total-clients">0</div>
           <div class="label">Clients avec commandes</div>
         </div>
         
@@ -485,7 +485,7 @@
             <i class="fa-solid fa-box"></i>
             Produits vendus
           </h3>
-          <div class="value" id="soldProducts">0</div>
+          <div class="value" id="total-products">0</div>
           <div class="label">Articles vendus</div>
         </div>
       </div>
@@ -905,13 +905,29 @@
 
     // Fonction d'export CSV
     document.getElementById('export-category-csv').addEventListener('click', function() {
-      if (!statsData.categorySales) return;
+      const categoryStats = {};
+      
+      commandesData.forEach(order => {
+        order.produits.forEach(produit => {
+          const product = produitsData.find(p => p.nom === produit.nom);
+          if (product) {
+            if (!categoryStats[product.categorie]) {
+              categoryStats[product.categorie] = { ventes: 0, revenu: 0 };
+            }
+            categoryStats[product.categorie].ventes += produit.quantite;
+            categoryStats[product.categorie].revenu += produit.prix * produit.quantite;
+          }
+        });
+      });
+      
+      const totalRevenue = Object.values(categoryStats).reduce((sum, cat) => sum + cat.revenu, 0);
       
       const csvContent = "data:text/csv;charset=utf-8," 
         + "Catégorie,Nombre de ventes,Revenu total,% du total\n"
-        + statsData.categorySales.map(c => 
-            `${c.categorie},${c.ventes},${c.revenu},${c.pourcentage}%`
-          ).join("\n");
+        + Object.entries(categoryStats).map(([categorie, stats]) => {
+            const pourcentage = totalRevenue > 0 ? ((stats.revenu / totalRevenue) * 100).toFixed(1) : 0;
+            return `${categorie},${stats.ventes},${stats.revenu},${pourcentage}%`;
+          }).join("\n");
       
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
@@ -927,10 +943,217 @@
       window.print();
     });
 
+    // Fonctions de gestion locale des données
+    function loadStats() {
+      console.log('Chargement des statistiques depuis localStorage...');
+      
+      // Forcer l'initialisation des données de test si localStorage est vide
+      const storedClients = localStorage.getItem('clientsData');
+      const storedProduits = localStorage.getItem('produitsData');
+      const storedCommandes = localStorage.getItem('commandesData');
+      
+      if (!storedClients || !storedProduits || !storedCommandes) {
+        console.log('Données manquantes, initialisation des données de test...');
+        clientsData = [...initialClientsData];
+        produitsData = [...initialProduitsData];
+        commandesData = [...initialCommandesData];
+        
+        localStorage.setItem('clientsData', JSON.stringify(clientsData));
+        localStorage.setItem('produitsData', JSON.stringify(produitsData));
+        localStorage.setItem('commandesData', JSON.stringify(commandesData));
+      } else {
+        // Charger les clients
+        try {
+          clientsData = JSON.parse(storedClients);
+        } catch (e) {
+          clientsData = [...initialClientsData];
+          localStorage.setItem('clientsData', JSON.stringify(clientsData));
+        }
+        
+        // Charger les produits
+        try {
+          produitsData = JSON.parse(storedProduits);
+        } catch (e) {
+          produitsData = [...initialProduitsData];
+          localStorage.setItem('produitsData', JSON.stringify(produitsData));
+        }
+        
+        // Charger les commandes
+        try {
+          commandesData = JSON.parse(storedCommandes);
+        } catch (e) {
+          commandesData = [...initialCommandesData];
+          localStorage.setItem('commandesData', JSON.stringify(commandesData));
+        }
+      }
+      
+      updateStats();
+    }
+
+    function updateStats() {
+      // Calculer les statistiques
+      const totalClients = clientsData.length;
+      const totalProduits = produitsData.length;
+      const totalCommandes = commandesData.length;
+      const totalCA = commandesData.reduce((sum, cmd) => sum + cmd.total, 0);
+      
+      // Mettre à jour les cartes de statistiques
+      document.getElementById('total-clients').textContent = formatNumber(totalClients);
+      document.getElementById('total-products').textContent = formatNumber(totalProduits);
+      document.getElementById('total-orders').textContent = formatNumber(totalCommandes);
+      document.getElementById('total-revenue').textContent = formatAmount(totalCA);
+      
+      // Mettre à jour le tableau des ventes par catégorie
+      updateCategorySales();
+      
+      // Mettre à jour les graphiques
+      updateCharts();
+    }
+
+    function updateCategorySales() {
+      const tbody = document.getElementById('category-sales-tbody');
+      const categoryStats = {};
+      
+      commandesData.forEach(order => {
+        order.produits.forEach(produit => {
+          const product = produitsData.find(p => p.nom === produit.nom);
+          if (product) {
+            if (!categoryStats[product.categorie]) {
+              categoryStats[product.categorie] = { ventes: 0, revenu: 0 };
+            }
+            categoryStats[product.categorie].ventes += produit.quantite;
+            categoryStats[product.categorie].revenu += produit.prix * produit.quantite;
+          }
+        });
+      });
+      
+      const totalRevenue = Object.values(categoryStats).reduce((sum, cat) => sum + cat.revenu, 0);
+      
+      tbody.innerHTML = Object.entries(categoryStats).map(([categorie, stats]) => {
+        const pourcentage = totalRevenue > 0 ? ((stats.revenu / totalRevenue) * 100).toFixed(1) : 0;
+        return `
+          <tr>
+            <td>${categorie}</td>
+            <td>${stats.ventes}</td>
+            <td>${formatAmount(stats.revenu)}</td>
+            <td>${pourcentage}%</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateCharts() {
+      // Graphique des ventes par jour
+      const dailySalesData = {};
+      commandesData.forEach(order => {
+        const date = order.date;
+        if (!dailySalesData[date]) {
+          dailySalesData[date] = 0;
+        }
+        dailySalesData[date] += order.total;
+      });
+
+      const dailySalesCtx = document.getElementById('dailySalesChart');
+      if (dailySalesCtx) {
+        new Chart(dailySalesCtx, {
+          type: 'line',
+          data: {
+            labels: Object.keys(dailySalesData),
+            datasets: [{
+              label: 'Ventes (FCFA)',
+              data: Object.values(dailySalesData),
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79, 70, 229, 0.1)',
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      }
+
+      // Graphique des top produits
+      const productStats = {};
+      commandesData.forEach(order => {
+        order.produits.forEach(produit => {
+          if (!productStats[produit.nom]) {
+            productStats[produit.nom] = 0;
+          }
+          productStats[produit.nom] += produit.prix * produit.quantite;
+        });
+      });
+
+      const topProducts = Object.entries(productStats)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+      const topProductsCtx = document.getElementById('topProductsChart');
+      if (topProductsCtx) {
+        new Chart(topProductsCtx, {
+          type: 'doughnut',
+          data: {
+            labels: topProducts.map(([nom]) => nom),
+            datasets: [{
+              data: topProducts.map(([, revenu]) => revenu),
+              backgroundColor: [
+                '#4f46e5',
+                '#16a34a',
+                '#f59e42',
+                '#dc2626',
+                '#0ea5e9'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Fonction pour formater les nombres
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    // Fonction pour formater les montants
+    function formatAmount(amount) {
+      return formatNumber(amount) + " FCFA";
+    }
+
     // Initialisation des statistiques
     async function initStats() {
       checkAuth();
+      
+      // Forcer l'initialisation des données de test
+      clientsData = [...initialClientsData];
+      produitsData = [...initialProduitsData];
+      commandesData = [...initialCommandesData];
+      
+      localStorage.setItem('clientsData', JSON.stringify(clientsData));
+      localStorage.setItem('produitsData', JSON.stringify(produitsData));
+      localStorage.setItem('commandesData', JSON.stringify(commandesData));
+      
       await loadStats();
+      console.log('Statistiques initialisées avec:', clientsData.length, 'clients,', produitsData.length, 'produits,', commandesData.length, 'commandes');
     }
 
     // Chargement au démarrage
