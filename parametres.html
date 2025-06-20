@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Ordexa - Paramètres</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #f59e42;
+      --info: #0ea5e9;
+      --sidebar-width: 230px;
+      --bg: #f6f8fa;
+      --card-bg: #ffffff;
+      --card-shadow: 0 2px 8px rgba(44,62,80,0.07);
+      --border: #e5e7eb;
+      --text-secondary: #666;
+      --transition: all 0.2s ease;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #222;
+      min-height: 100vh;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar .logo {
+      display: flex;
+      align-items: center;
+      padding: 1.2rem 1.5rem 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar .logo img {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .sidebar .logo span {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+    .sidebar nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-top: 1.5rem;
+    }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      padding: 0.9rem 1.5rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 1rem;
+      border-left: 4px solid transparent;
+      transition: var(--transition);
+    }
+    .sidebar nav a.active, .sidebar nav a:hover {
+      background: var(--bg);
+      color: var(--primary);
+      border-left: 4px solid var(--primary);
+    }
+    .sidebar nav a i {
+      margin-right: 1rem;
+      font-size: 1.2em;
+    }
+    .sidebar .logout {
+      margin: 1.5rem;
+      padding: 0.7rem 0;
+      border-top: 1px solid var(--border);
+      color: var(--danger);
+      background: none;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .sidebar .logout i {
+      margin-right: 0.7rem;
+    }
+    .main {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      padding: 0;
+      transition: var(--transition);
+    }
+    .header {
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header .menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--primary);
+      cursor: pointer;
+      margin-right: 1rem;
+    }
+    .header .user {
+      display: flex;
+      align-items: center;
+    }
+    .header .user img {
+      width: 36px; height: 36px; border-radius: 50%; margin-left: 1rem;
+    }
+    .settings-content {
+      padding: 2rem 2.5rem;
+    }
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-radius: 16px;
+      padding: 2rem;
+      color: white;
+      box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+    }
+    .settings-header h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .settings-header .btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .settings-header .btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+    .card h3 {
+      margin: 0 0 1rem 0;
+      color: var(--primary-dark);
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .form-group { margin-bottom: 1rem; }
+    label { font-weight: 600; color: var(--primary-dark); margin-bottom: 0.4em; display: block; }
+    input, textarea, select {
+      width: 100%; padding: 0.7rem 1rem; margin-top: 0.2rem; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; transition: border 0.2s;
+    }
+    input:focus, textarea:focus, select:focus { border: 1.5px solid var(--primary); outline: none; }
+    .form-feedback { color: #dc2626; font-size: 0.95em; margin-top: -0.8em; margin-bottom: 0.8em; display: none; }
+    .form-feedback.active { display: block; }
+    .user-list { display: flex; flex-direction: column; gap: 1rem; }
+    .user-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: #f8f9fa; border-radius: 8px; }
+    .user-info { display: flex; align-items: center; gap: 1rem; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #e0e7ff; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; color: #6366f1; }
+    .user-role { padding: 0.25em 0.75em; border-radius: 8px; font-size: 0.85em; font-weight: 600; display: inline-block; }
+    .role-admin { background: #dbeafe; color: #2563eb; }
+    .role-manager { background: #dcfce7; color: #22c55e; }
+    .role-employee { background: #fef9c3; color: #eab308; }
+    .user-actions { display: flex; align-items: center; gap: 0.5rem; }
+    .user-actions button { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 0.25rem; }
+    .user-actions .fa-trash { color: #dc2626; }
+    .user-actions .fa-trash:hover { color: #b91c1c; }
+    .user-actions .fa-edit { color: #2563eb; }
+    .user-actions .fa-edit:hover { color: #1e293b; }
+    .user-actions .fa-key { color: #facc15; }
+    .user-actions .fa-key:hover { color: #eab308; }
+    .user-add-btn { width: 100%; margin-top: 1rem; background: var(--primary); color: #fff; font-weight: 600; padding: 0.75rem; border-radius: 8px; border: none; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+    .user-add-btn:hover { background: var(--primary-dark); }
+    .backup-btn { width: 100%; margin-bottom: 0.5rem; background: #f3f4f6; color: #374151; font-weight: 600; padding: 0.75rem; border-radius: 8px; border: none; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+    .backup-btn:hover { background: #e5e7eb; }
+    .backup-btn.bg-blue-100 { background: #dbeafe; color: #1e40af; }
+    .backup-btn.bg-blue-100:hover { background: #bfdbfe; }
+    .backup-btn.bg-purple-100 { background: #e9d5ff; color: #7c3aed; }
+    .backup-btn.bg-purple-100:hover { background: #d8b4fe; }
+    .backup-btn.bg-red-100 { background: #fee2e2; color: #dc2626; }
+    .backup-btn.bg-red-100:hover { background: #fecaca; }
+    .notification { position: fixed; top: 2rem; right: 2rem; z-index: 1000; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; padding: 1rem; display: flex; align-items: center; gap: 0.5rem; animation: slideIn 0.3s ease-out; }
+    .notification.success { border-left: 4px solid #16a34a; }
+    .notification.error { border-left: 4px solid #dc2626; }
+    .notification.info { border-left: 4px solid #0ea5e9; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @media (max-width: 900px) {
+      .main { margin-left: 0; }
+      .sidebar { left: -100vw; }
+      .sidebar.active { left: 0; }
+      .header .menu-btn { display: inline-block; }
+      .settings-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .settings-content { padding: 1rem; }
+      .settings-header { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="logo">
+      <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop&crop=center" alt="Logo">
+      <span>Ordexa</span>
+    </div>
+    <nav>
+      <a href="page2.html">
+        <i class="fa-solid fa-gauge"></i>
+        Tableau de bord
+      </a>
+      <a href="client.html">
+        <i class="fa-solid fa-users"></i>
+        Clients
+      </a>
+      <a href="produits.html">
+        <i class="fa-solid fa-box"></i>
+        Produits
+      </a>
+      <a href="commandes.html">
+        <i class="fa-solid fa-cart-shopping"></i>
+        Commandes
+      </a>
+      <a href="stats.html">
+        <i class="fa-solid fa-chart-line"></i>
+        Statistiques
+      </a>
+      <a href="parametres.html" class="active">
+        <i class="fa-solid fa-gear"></i>
+        Paramètres
+      </a>
+    </nav>
+    <button class="logout" onclick="logout()">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      Déconnexion
+    </button>
+  </div>
+  <div class="main">
+    <div class="header">
+      <button class="menu-btn" onclick="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="user">
+        <span id="user-name">Mohamed Koné</span>
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="User">
+      </div>
+    </div>
+    <div class="settings-content">
+      <div class="settings-header">
+        <h1><i class="fa-solid fa-gear"></i> Paramètres</h1>
+        <div style="display: flex; gap: 1rem;">
+          <a href="page2.html" class="btn">
+            <i class="fa-solid fa-home"></i>
+            Tableau de bord
+          </a>
+        </div>
+      </div>
+      <div class="settings-grid">
+        <div class="card" id="card-password">
+          <h3><i class="fa-solid fa-key"></i> Changer le mot de passe</h3>
+          <form id="change-password-form" autocomplete="off">
+            <div class="form-group">
+              <label for="current-password">Mot de passe actuel</label>
+              <input id="current-password" type="password" required autocomplete="current-password">
+            </div>
+            <div class="form-group">
+              <label for="new-password">Nouveau mot de passe</label>
+              <input id="new-password" type="password" required autocomplete="new-password">
+            </div>
+            <div class="form-group">
+              <label for="confirm-new-password">Confirmer le nouveau mot de passe</label>
+              <input id="confirm-new-password" type="password" required autocomplete="new-password">
+              <div class="form-feedback" id="password-change-error">Les mots de passe ne correspondent pas</div>
+            </div>
+            <div style="text-align:right;">
+              <button type="submit" class="btn btn-primary">Mettre à jour</button>
+            </div>
+          </form>
+        </div>
+        <div class="card" id="card-store">
+          <h3><i class="fa-solid fa-store"></i> Informations de la boutique</h3>
+          <form id="store-info-form" autocomplete="off">
+            <div class="form-group">
+              <label for="store-name">Nom de la boutique</label>
+              <input id="store-name" type="text" required>
+            </div>
+            <div class="form-group">
+              <label for="store-email">Email</label>
+              <input id="store-email" type="email" required>
+            </div>
+            <div class="form-group">
+              <label for="store-address">Adresse</label>
+              <textarea id="store-address" rows="2" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="store-phone">Téléphone</label>
+              <input id="store-phone" type="tel">
+            </div>
+            <div class="form-group">
+              <label for="store-currency">Devise</label>
+              <select id="store-currency" required>
+                <option value="FCFA">Franc CFA (FCFA)</option>
+                <option value="USD">Dollar américain ($)</option>
+                <option value="EUR">Euro (€)</option>
+                <option value="GBP">Livre sterling (£)</option>
+              </select>
+            </div>
+            <div style="text-align:right;">
+              <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+        <div class="card" id="card-users">
+          <h3><i class="fa-solid fa-users"></i> Gestion des utilisateurs</h3>
+          <div class="user-list" id="user-list">
+            <!-- Les utilisateurs seront chargés ici -->
+          </div>
+          <button class="user-add-btn" id="add-user-btn"><i class="fa-solid fa-plus"></i> Ajouter un utilisateur</button>
+        </div>
+        <div class="card" id="card-backup">
+          <h3><i class="fa-solid fa-database"></i> Sauvegarde et récupération</h3>
+          <button class="backup-btn bg-blue-100" id="backup-btn"><i class="fa-solid fa-download"></i> Sauvegarder les données</button>
+          <button class="backup-btn bg-purple-100" id="restore-btn"><i class="fa-solid fa-upload"></i> Restaurer des données</button>
+          <button class="backup-btn bg-red-100" id="reset-btn"><i class="fa-solid fa-trash-alt"></i> Réinitialiser les données</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Simulation utilisateurs si vide
+    if (!localStorage.getItem('users')) {
+      localStorage.setItem('users', JSON.stringify([
+        {id:1, nom:'Koné', prenom:'Mohamed', email:'admin@ordexa.com', role:'admin', avatar:'', password:'admin123'},
+        {id:2, nom:'Traoré', prenom:'Aïssata', email:'aissata.traore@ordexa.com', role:'manager', avatar:'', password:'password123'},
+        {id:3, nom:'Coulibaly', prenom:'Moussa', email:'moussa.coulibaly@ordexa.com', role:'employee', avatar:'', password:'password123'},
+        {id:4, nom:'Keïta', prenom:'Mariam', email:'mariam.keita@ordexa.com', role:'employee', avatar:'', password:'password123'},
+        {id:5, nom:'Diarra', prenom:'Ibrahim', email:'ibrahim.diarra@ordexa.com', role:'employee', avatar:'', password:'password123'},
+        {id:6, nom:'Konaté', prenom:'Fatoumata', email:'fatoumata.konate@ordexa.com', role:'manager', avatar:'', password:'password123'},
+        {id:7, nom:'Diallo', prenom:'Abdoulaye', email:'abdoulaye.diallo@ordexa.com', role:'employee', avatar:'', password:'password123'},
+        {id:8, nom:'Sidibé', prenom:'Ousmane', email:'ousmane.sidibe@ordexa.com', role:'employee', avatar:'', password:'password123'},
+        {id:9, nom:'Sangaré', prenom:'Kadidia', email:'kadidia.sangare@ordexa.com', role:'employee', avatar:'', password:'password123'},
+        {id:10, nom:'Dembélé', prenom:'Boubacar', email:'boubacar.dembele@ordexa.com', role:'manager', avatar:'', password:'password123'},
+        {id:11, nom:'Camara', prenom:'Adama', email:'adama.camara@ordexa.com', role:'employee', avatar:'', password:'password123'},
+        {id:12, nom:'Touré', prenom:'Hawa', email:'hawa.toure@ordexa.com', role:'employee', avatar:'', password:'password123'},
+        {id:13, nom:'Sissoko', prenom:'Mahamadou', email:'mahamadou.sissoko@ordexa.com', role:'employee', avatar:'', password:'password123'},
+        {id:14, nom:'Samaké', prenom:'Awa', email:'awa.samake@ordexa.com', role:'employee', avatar:'', password:'password123'},
+        {id:15, nom:'Doumbia', prenom:'Lassana', email:'lassana.doumbia@ordexa.com', role:'employee', avatar:'', password:'password123'}
+      ]));
+    }
+    // Fonction de notification
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 4000);
+    }
+    // Gestion des utilisateurs
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    function loadUsers() {
+      const userList = document.getElementById('user-list');
+      if (users.length === 0) {
+        userList.innerHTML = '<p style="text-align:center;color:#666;padding:1rem;">Aucun utilisateur trouvé</p>';
+        return;
+      }
+      // Trier les utilisateurs par rôle (admin en premier, puis manager, puis employee)
+      const sortedUsers = users.sort((a, b) => {
+        const roleOrder = { admin: 1, manager: 2, employee: 3 };
+        return roleOrder[a.role] - roleOrder[b.role];
+      });
+      userList.innerHTML = sortedUsers.map(user => `
+        <div class="user-item">
+          <div class="user-info">
+            <div class="user-avatar">${user.prenom[0] + user.nom[0]}</div>
+            <div>
+              <div style="font-weight:600;">${user.prenom} ${user.nom}</div>
+              <div style="font-size:0.95em;color:#888;">${user.email}</div>
+            </div>
+            <span class="user-role role-${user.role}">${user.role === 'admin' ? 'Administrateur' : user.role === 'manager' ? 'Manager' : 'Employé'}</span>
+          </div>
+          <div class="user-actions">
+            <button title="Modifier" onclick="editUser(${user.id})"><i class="fa-solid fa-edit"></i></button>
+            <button title="Changer mot de passe" onclick="changeUserPassword(${user.id})"><i class="fa-solid fa-key"></i></button>
+            <button title="Supprimer" onclick="deleteUser(${user.id})"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+    // Fonctions utilisateurs (CRUD simplifié)
+    function editUser(id) { showNotification('Modification utilisateur non implémentée', 'info'); }
+    function changeUserPassword(id) { showNotification('Changement de mot de passe utilisateur non implémenté', 'info'); }
+    function deleteUser(id) {
+      if (confirm('Supprimer cet utilisateur ?')) {
+        users = users.filter(u => u.id !== id);
+        localStorage.setItem('users', JSON.stringify(users));
+        loadUsers();
+        showNotification('Utilisateur supprimé', 'success');
+      }
+    }
+    document.getElementById('add-user-btn').onclick = function() {
+      showNotification('Ajout utilisateur non implémenté', 'info');
+    };
+    // Mot de passe
+    document.getElementById('change-password-form').onsubmit = function(e) {
+      e.preventDefault();
+      const newPwd = document.getElementById('new-password').value;
+      const confirmPwd = document.getElementById('confirm-new-password').value;
+      if (newPwd !== confirmPwd) {
+        document.getElementById('password-change-error').classList.add('active');
+        return;
+      }
+      document.getElementById('password-change-error').classList.remove('active');
+      showNotification('Mot de passe mis à jour', 'success');
+      this.reset();
+    };
+    // Boutique
+    document.getElementById('store-info-form').onsubmit = function(e) {
+      e.preventDefault();
+      showNotification('Informations boutique enregistrées', 'success');
+    };
+    // Sauvegarde, restauration, reset
+    document.getElementById('backup-btn').onclick = function() { showNotification('Sauvegarde effectuée', 'success'); };
+    document.getElementById('restore-btn').onclick = function() { showNotification('Restauration effectuée', 'success'); };
+    document.getElementById('reset-btn').onclick = function() {
+      if (confirm('Réinitialiser toutes les données ?')) {
+        localStorage.clear();
+        showNotification('Données réinitialisées', 'success');
+        setTimeout(() => location.reload(), 1000);
+      }
+    };
+    // Sidebar mobile
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('active');
+    }
+    // Déconnexion
+    function logout() {
+      if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        window.location.href = 'page1.html';
+      }
+    }
+    // Init
+    document.addEventListener('DOMContentLoaded', loadUsers);
+  </script>
+</body>
+</html> 

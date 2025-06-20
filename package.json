@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "@hint/connector-local": "^3.2.28"
+  }
+}

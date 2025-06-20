@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion de commandes et de clients</title>
+  <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="page1.css">
+</head>
+<body>
+  <div class="container">
+    <div class="signin-signup">
+      <!-- Formulaire de Connexion -->
+      <form action="" class="sign-in-form">
+        <h2 class="title">Connexion</h2>
+        <div class="input-field">
+          <i class="fas fa-user"></i>
+          <input type="text" placeholder="Username" required>
+        </div>
+        <div class="input-field">
+          <i class="fas fa-lock"></i>
+          <input type="password" placeholder="Password" required>
+        </div>
+        <input type="submit" value="Connexion" class="btn">
+        <p class="social-text">Ou connectez-vous avec les réseaux sociaux</p>
+        <div class="social-media">
+          <a href="#" class="social-icon"><i class="fab fa-facebook"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-google"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+        <p class="account-text">Vous n'avez pas de compte ? <a href="#" id="sign-up-btn2">Inscrivez-vous</a></p>
+      </form>
+
+      <!-- Formulaire d'Inscription -->
+      <form action="" class="sign-up-form">
+        <h2 class="title">Inscription</h2>
+        <div class="input-field">
+          <i class="fas fa-user"></i>
+          <input type="text" placeholder="Username" required>
+        </div>
+        <div class="input-field">
+          <i class="fas fa-envelope"></i>
+          <input type="email" placeholder="Email" required>
+        </div>
+        <div class="input-field">
+          <i class="fas fa-lock"></i>
+          <input type="password" placeholder="Password" required>
+        </div>
+        <div class="input-field">
+          <i class="fas fa-lock"></i>
+          <input type="password" placeholder="Confirmer le mot de passe" required>
+        </div>
+        <input type="submit" value="Inscription" class="btn">
+        <p class="social-text">Ou inscrivez-vous avec les réseaux sociaux</p>
+        <div class="social-media">
+          <a href="#" class="social-icon"><i class="fab fa-facebook"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-google"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+        <p class="account-text">Vous avez déjà un compte ? <a href="#" id="sign-in-btn2">Connectez-vous</a></p>
+      </form>
+    </div>
+
+    <!-- Panneaux latéraux -->
+    <div class="panels-container">
+      <div class="panel left-panel">
+        <div class="content">
+          <h3>Ordexa</h3>
+          <p>Système de gestion de commandes et de clients</p>
+          <button class="btn" id="sign-in-btn">Connexion</button>
+        </div>
+      </div>
+      <div class="panel right-panel">
+        <div class="content">
+          <h3>Ordexa</h3>
+          <p>Système de gestion de commandes et de clients</p>
+          <button class="btn" id="sign-up-btn">Inscription</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script JavaScript -->
+  <script src="page1.js"></script>
+</body>
+</html>
