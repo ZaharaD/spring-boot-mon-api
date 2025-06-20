@@ -1126,12 +1126,13 @@
     function initProduits() {
       checkAuth();
       
-      // Forcer l'initialisation des données si elles n'existent pas
-      if (!localStorage.getItem('produits')) {
-        localStorage.setItem('produits', JSON.stringify(initialProduitsData));
-      }
+      // Forcer l'affichage des données de test
+      produitsData = [...initialProduitsData];
+      localStorage.setItem('produits', JSON.stringify(produitsData));
       
-      loadProduits();
+      updateStats();
+      renderProduits();
+      console.log('Produits forcés:', produitsData.length);
     }
 
     // Chargement au démarrage

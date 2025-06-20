@@ -1101,12 +1101,13 @@
     function initClients() {
       checkAuth();
       
-      // Forcer l'initialisation des données si elles n'existent pas
-      if (!localStorage.getItem('clients')) {
-        localStorage.setItem('clients', JSON.stringify(initialClientsData));
-      }
+      // Forcer l'affichage des données de test
+      clientsData = [...initialClientsData];
+      localStorage.setItem('clients', JSON.stringify(clientsData));
       
-      loadClients();
+      updateStats();
+      renderClients();
+      console.log('Clients forcés:', clientsData.length);
     }
 
     // Chargement au démarrage

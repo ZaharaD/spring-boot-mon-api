@@ -509,8 +509,8 @@
               <tr>
                 <th>Produit</th>
                 <th>Prix</th>
-                <th>Vendus</th>
                 <th>Stock</th>
+                <th>Catégorie</th>
               </tr>
             </thead>
             <tbody id="popularProductsBody">
@@ -595,52 +595,59 @@
       }
     }
 
-    // Charger les données du dashboard
+    // Chargement des données du dashboard
     async function loadDashboardData() {
-      // Données statiques pour la production
-      dashboardData = {
-        stats: {
-          commandes: 156,
-          chiffreAffaires: 2847500,
-          clients: 89,
-          produits: 45
-        },
-        recentOrders: [
-          {
-            id: "CMD-001",
-            client: { nom: "Diarra", prenom: "Fanta" },
-            dateCommande: "2024-06-20",
-            total: 125000,
-            statut: "livree"
+      try {
+        // Charger les données depuis localStorage
+        const clients = JSON.parse(localStorage.getItem('clients') || '[]');
+        const produits = JSON.parse(localStorage.getItem('produits') || '[]');
+        const commandes = JSON.parse(localStorage.getItem('commandes') || '[]');
+        
+        // Calculer les statistiques
+        const totalClients = clients.length;
+        const totalProduits = produits.length;
+        const totalCommandes = commandes.length;
+        const chiffreAffaires = commandes.reduce((sum, cmd) => sum + (cmd.total || 0), 0);
+        
+        // Commandes récentes (5 dernières)
+        const recentOrders = commandes
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .slice(0, 5);
+        
+        // Produits populaires (par prix décroissant)
+        const popularProducts = produits
+          .sort((a, b) => b.prix - a.prix)
+          .slice(0, 5);
+        
+        // Ventes mensuelles (données fictives pour l'instant)
+        const monthlySales = [210000, 185000, 240000, 260000, 300000, 320000, 350000, 370000, 340000, 310000, 280000, 295000];
+        
+        // Mettre à jour les données du dashboard
+        dashboardData = {
+          stats: {
+            clients: totalClients,
+            produits: totalProduits,
+            commandes: totalCommandes,
+            chiffreAffaires: chiffreAffaires
           },
-          {
-            id: "CMD-002", 
-            client: { nom: "Keita", prenom: "Moussa" },
-            dateCommande: "2024-06-19",
-            total: 89000,
-            statut: "encours"
-          },
-          {
-            id: "CMD-003",
-            client: { nom: "Traoré", prenom: "Aminata" },
-            dateCommande: "2024-06-18",
-            total: 156000,
-            statut: "livree"
-          }
-        ],
-        popularProducts: [
-          { nom: "Riz local", prix: 2500, vendus: 45, stock: 120 },
-          { nom: "Millet", prix: 1800, vendus: 38, stock: 85 },
-          { nom: "Sorgho", prix: 2200, vendus: 32, stock: 95 }
-        ],
-        monthlySales: [210000, 185000, 240000, 260000, 300000, 320000, 350000, 370000, 340000, 310000, 280000, 295000]
-      };
-      
-      updateStats();
-      updateRecentOrders();
-      updatePopularProducts();
-      createSalesChart();
-      createOrdersChart();
+          recentOrders: recentOrders,
+          popularProducts: popularProducts,
+          monthlySales: monthlySales
+        };
+        
+        // Mettre à jour l'affichage
+        updateStats();
+        updateRecentOrders();
+        updatePopularProducts();
+        createSalesChart();
+        createOrdersChart();
+        
+        console.log('Dashboard chargé:', dashboardData);
+        
+      } catch (error) {
+        console.error('Erreur lors du chargement du dashboard:', error);
+        showNotification('Erreur lors du chargement des données', 'error');
+      }
     }
 
     // Fonction pour formater les nombres
@@ -682,18 +689,21 @@
       const tbody = document.getElementById('recentOrdersBody');
       tbody.innerHTML = '';
       
-      if (dashboardData.recentOrders) {
+      if (dashboardData.recentOrders && dashboardData.recentOrders.length > 0) {
         dashboardData.recentOrders.forEach(order => {
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${order.id}</td>
-            <td>${order.client?.nom || 'Client inconnu'}</td>
-            <td>${formatDate(order.dateCommande)}</td>
+            <td>${order.numero || order.id}</td>
+            <td>${order.client || 'Client inconnu'}</td>
+            <td>${formatDate(order.date)}</td>
             <td>${formatAmount(order.total || 0)}</td>
             <td><span class="status ${order.statut}">${getStatusText(order.statut)}</span></td>
           `;
           tbody.appendChild(row);
         });
+      } else {
+        // Afficher un message si aucune commande
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">Aucune commande récente</td></tr>';
       }
     }
 
@@ -702,17 +712,20 @@
       const tbody = document.getElementById('popularProductsBody');
       tbody.innerHTML = '';
       
-      if (dashboardData.popularProducts) {
+      if (dashboardData.popularProducts && dashboardData.popularProducts.length > 0) {
         dashboardData.popularProducts.forEach(product => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${product.nom}</td>
             <td>${formatAmount(product.prix)}</td>
-            <td>${product.vendus || 0}</td>
             <td>${product.stock || 0}</td>
+            <td>${product.categorie || 'N/A'}</td>
           `;
           tbody.appendChild(row);
         });
+      } else {
+        // Afficher un message si aucun produit
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #888;">Aucun produit disponible</td></tr>';
       }
     }
 

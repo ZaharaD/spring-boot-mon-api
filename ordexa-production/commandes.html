@@ -1123,12 +1123,13 @@
     function initCommandes() {
       checkAuth();
       
-      // Forcer l'initialisation des données si elles n'existent pas
-      if (!localStorage.getItem('commandes')) {
-        localStorage.setItem('commandes', JSON.stringify(initialCommandesData));
-      }
+      // Forcer l'affichage des données de test
+      commandesData = [...initialCommandesData];
+      localStorage.setItem('commandes', JSON.stringify(commandesData));
       
-      loadCommandes();
+      updateStats();
+      renderCommandes();
+      console.log('Commandes forcées:', commandesData.length);
       
       // Initialiser la date par défaut
       const today = new Date().toISOString().split('T')[0];
