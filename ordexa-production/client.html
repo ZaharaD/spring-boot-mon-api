@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Ordexa - Gestion des Clients</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #f59e42;
+      --info: #0ea5e9;
+      --sidebar-width: 230px;
+      --bg: #f6f8fa;
+      --card-bg: #ffffff;
+      --card-shadow: 0 2px 8px rgba(44,62,80,0.07);
+      --border: #e5e7eb;
+      --text-secondary: #666;
+      --transition: all 0.2s ease;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #222;
+      min-height: 100vh;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar .logo {
+      display: flex;
+      align-items: center;
+      padding: 1.2rem 1.5rem 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .sidebar .logo img {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    
+    .sidebar .logo span {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+    
+    .sidebar nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-top: 1.5rem;
+    }
+    
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      padding: 0.9rem 1.5rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 1rem;
+      border-left: 4px solid transparent;
+      transition: var(--transition);
+    }
+    
+    .sidebar nav a.active, .sidebar nav a:hover {
+      background: var(--bg);
+      color: var(--primary);
+      border-left: 4px solid var(--primary);
+    }
+    
+    .sidebar nav a i {
+      margin-right: 1rem;
+      font-size: 1.2em;
+    }
+    
+    .sidebar .logout {
+      margin: 1.5rem;
+      padding: 0.7rem 0;
+      border-top: 1px solid var(--border);
+      color: var(--danger);
+      background: none;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    
+    .sidebar .logout i {
+      margin-right: 0.7rem;
+    }
+    
+    /* Main */
+    .main {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      padding: 0;
+      transition: var(--transition);
+    }
+    
+    /* Header */
+    .header {
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .header .menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--primary);
+      cursor: pointer;
+      margin-right: 1rem;
+    }
+    
+    .header .user {
+      display: flex;
+      align-items: center;
+    }
+    
+    .header .user img {
+      width: 36px; height: 36px; border-radius: 50%; margin-left: 1rem;
+    }
+    
+    /* Clients Content */
+    .clients-content {
+      padding: 2rem 2.5rem;
+    }
+    
+    .clients-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-radius: 16px;
+      padding: 2rem;
+      color: white;
+      box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+    }
+    
+    .clients-header h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .clients-header .btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .clients-header .btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--card-shadow);
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(44, 62, 80, 0.15);
+    }
+    
+    .stat-card h3 {
+      font-size: 1.1rem;
+      color: var(--primary-dark);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .stat-card .value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-card .label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    /* Filters */
+    .filters {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border);
+    }
+    
+    .filters h3 {
+      font-size: 1.2rem;
+      color: var(--primary-dark);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .filters-content {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .filter-group label {
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    
+    .filter-group select,
+    .filter-group input {
+      padding: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    
+    /* Clients Grid */
+    .clients-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .client-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--card-shadow);
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+    }
+    
+    .client-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(44, 62, 80, 0.15);
+    }
+    
+    .client-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .client-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--primary);
+    }
+    
+    .client-info h4 {
+      font-size: 1.2rem;
+      color: var(--primary-dark);
+      margin-bottom: 0.3rem;
+    }
+    
+    .client-info p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 0.3rem;
+    }
+    
+    .client-badges {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .badge {
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    
+    .badge.vip {
+      background: #fef3c7;
+      color: var(--warning);
+    }
+    
+    .badge.nouveau {
+      background: #e0f2fe;
+      color: var(--info);
+    }
+    
+    .badge.premium {
+      background: #ede9fe;
+      color: var(--primary);
+    }
+    
+    .client-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      text-decoration: none;
+    }
+    
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+    }
+    
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .modal-header h3 {
+      margin: 0;
+      color: var(--primary-dark);
+      font-size: 1.3rem;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    
+    .modal-close:hover {
+      background: var(--border);
+      color: var(--text-primary);
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 900px) {
+      .main { margin-left: 0; }
+      .sidebar { left: -100vw; }
+      .sidebar.active { left: 0; }
+      .header .menu-btn { display: inline-block; }
+      .clients-grid { grid-template-columns: 1fr; }
+      .filters-content { flex-direction: column; align-items: stretch; }
+    }
+    
+    @media (max-width: 600px) {
+      .clients-content { padding: 1rem; }
+      .clients-header { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+
+    /* Animation pour les notifications */
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="logo">
+      <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop&crop=center" alt="Logo">
+      <span>Ordexa</span>
+    </div>
+    <nav>
+      <a href="page2.html">
+        <i class="fa-solid fa-gauge"></i>
+        Tableau de bord
+      </a>
+      <a href="client.html" class="active">
+        <i class="fa-solid fa-users"></i>
+        Clients
+      </a>
+      <a href="produits.html">
+        <i class="fa-solid fa-box"></i>
+        Produits
+      </a>
+      <a href="commandes.html">
+        <i class="fa-solid fa-cart-shopping"></i>
+        Commandes
+      </a>
+      <a href="stats.html">
+        <i class="fa-solid fa-chart-line"></i>
+        Statistiques
+      </a>
+      <a href="parametres.html">
+        <i class="fa-solid fa-gear"></i>
+        Paramètres
+      </a>
+    </nav>
+    <button class="logout" onclick="logout()">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      Déconnexion
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Header -->
+    <div class="header">
+      <button class="menu-btn" onclick="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="user">
+        <span id="user-name">Mohamed Koné</span>
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="User">
+      </div>
+    </div>
+
+    <!-- Clients Content -->
+    <div class="clients-content">
+      <!-- Clients Header -->
+      <div class="clients-header">
+        <h1>
+          <i class="fa-solid fa-users"></i>
+          Gestion des Clients
+        </h1>
+        <div style="display: flex; gap: 1rem;">
+          <a href="page2.html" class="btn">
+            <i class="fa-solid fa-home"></i>
+            Tableau de bord
+          </a>
+          <button class="btn" onclick="showModal('addClientModal')">
+            <i class="fa-solid fa-plus"></i>
+            Nouveau client
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>
+            <i class="fa-solid fa-users"></i>
+            Total Clients
+          </h3>
+          <div class="value" id="totalClients">0</div>
+          <div class="label">Nombre total de clients</div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>
+            <i class="fa-solid fa-crown"></i>
+            Clients VIP
+          </h3>
+          <div class="value" id="vipClients">0</div>
+          <div class="label">Clients premium</div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>
+            <i class="fa-solid fa-user-plus"></i>
+            Nouveaux Clients
+          </h3>
+          <div class="value" id="newClients">0</div>
+          <div class="label">Ce mois</div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>
+            <i class="fa-solid fa-chart-line"></i>
+            Croissance
+          </h3>
+          <div class="value" id="growthRate">+12%</div>
+          <div class="label">Taux de croissance</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <h3>
+          <i class="fa-solid fa-filter"></i>
+          Filtres et recherche
+        </h3>
+        <div class="filters-content">
+          <div class="filter-group">
+            <label>Rechercher :</label>
+            <input type="text" id="searchClient" class="form-control" placeholder="Nom, email, téléphone..." oninput="filterClients()">
+          </div>
+          <div class="filter-group">
+            <label>Statut :</label>
+            <select id="filterStatus" onchange="filterClients()">
+              <option value="">Tous</option>
+              <option value="vip">VIP</option>
+              <option value="nouveau">Nouveau</option>
+              <option value="premium">Premium</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Trier par :</label>
+            <select id="sortBy" onchange="sortClients()">
+              <option value="nom">Nom</option>
+              <option value="date">Date d'inscription</option>
+              <option value="commandes">Nombre de commandes</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <button class="btn btn-secondary" onclick="exportToCSV()">
+              <i class="fa-solid fa-download"></i>
+              Exporter CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clients Grid -->
+      <div class="clients-grid" id="clientsGrid">
+        <!-- Les clients seront chargés ici -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ajout/Modification Client -->
+  <div class="modal" id="addClientModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Nouveau Client</h3>
+        <button class="modal-close" onclick="hideModal('addClientModal')">&times;</button>
+      </div>
+      <form id="clientForm">
+        <div class="form-group">
+          <label for="clientNom">Nom</label>
+          <input type="text" id="clientNom" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="clientPrenom">Prénom</label>
+          <input type="text" id="clientPrenom" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="clientEmail">Email</label>
+          <input type="email" id="clientEmail" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="clientTel">Téléphone</label>
+          <input type="tel" id="clientTel" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="clientAdresse">Adresse</label>
+          <textarea id="clientAdresse" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="clientStatut">Statut</label>
+          <select id="clientStatut" class="form-control">
+            <option value="actif">Actif</option>
+            <option value="vip">VIP</option>
+            <option value="premium">Premium</option>
+            <option value="nouveau">Nouveau</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('addClientModal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Configuration de l'API
+    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    let clientsData = [];
+    let currentUser = null;
+
+    // Données de test pour les clients
+    const initialClientsData = [
+      {
+        id: 1,
+        nom: "Diarra",
+        prenom: "Fanta",
+        email: "fanta.diarra@email.ml",
+        telephone: "+223 76 12 34 56",
+        adresse: "Bamako, Mali",
+        dateInscription: "2024-01-15",
+        statut: "actif",
+        commandes: 5,
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+      },
+      {
+        id: 2,
+        nom: "Keita",
+        prenom: "Moussa",
+        email: "moussa.keita@email.ml",
+        telephone: "+223 76 23 45 67",
+        adresse: "Sikasso, Mali",
+        dateInscription: "2024-02-20",
+        statut: "vip",
+        commandes: 12,
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+      },
+      {
+        id: 3,
+        nom: "Traoré",
+        prenom: "Aminata",
+        email: "aminata.traore@email.ml",
+        telephone: "+223 76 34 56 78",
+        adresse: "Ségou, Mali",
+        dateInscription: "2024-03-10",
+        statut: "actif",
+        commandes: 3,
+        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
+      },
+      {
+        id: 4,
+        nom: "Koné",
+        prenom: "Fatoumata",
+        email: "fatoumata.kone@email.ml",
+        telephone: "+223 76 45 67 89",
+        adresse: "Mopti, Mali",
+        dateInscription: "2024-04-05",
+        statut: "premium",
+        commandes: 8,
+        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
+      },
+      {
+        id: 5,
+        nom: "Coulibaly",
+        prenom: "Ousmane",
+        email: "ousmane.coulibaly@email.ml",
+        telephone: "+223 76 56 78 90",
+        adresse: "Kayes, Mali",
+        dateInscription: "2024-05-12",
+        statut: "actif",
+        commandes: 2,
+        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face"
+      },
+      {
+        id: 6,
+        nom: "Sangaré",
+        prenom: "Mariam",
+        email: "mariam.sangare@email.ml",
+        telephone: "+223 76 67 89 01",
+        adresse: "Tombouctou, Mali",
+        dateInscription: "2024-06-01",
+        statut: "nouveau",
+        commandes: 1,
+        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face"
+      },
+      {
+        id: 7,
+        nom: "Diallo",
+        prenom: "Boubacar",
+        email: "boubacar.diallo@email.ml",
+        telephone: "+223 76 78 90 12",
+        adresse: "Gao, Mali",
+        dateInscription: "2024-06-15",
+        statut: "actif",
+        commandes: 4,
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+      },
+      {
+        id: 8,
+        nom: "Ballo",
+        prenom: "Aïcha",
+        email: "aicha.ballo@email.ml",
+        telephone: "+223 76 89 01 23",
+        adresse: "Koulikoro, Mali",
+        dateInscription: "2024-06-20",
+        statut: "nouveau",
+        commandes: 0,
+        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
+      }
+    ];
+
+    // Vérification de l'authentification
+    function checkAuth() {
+      const token = localStorage.getItem('jwtToken');
+      const user = localStorage.getItem('user');
+      
+      if (!token || !user) {
+        window.location.href = 'page1.html';
+        return;
+      }
+      
+      try {
+        currentUser = JSON.parse(user);
+      } catch (e) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      }
+    }
+
+    // Charger les clients depuis localStorage
+    function loadClients() {
+      const storedClients = localStorage.getItem('clients');
+      if (storedClients) {
+        clientsData = JSON.parse(storedClients);
+      } else {
+        clientsData = [...initialClientsData];
+        localStorage.setItem('clients', JSON.stringify(clientsData));
+      }
+      updateStats();
+      renderClients();
+    }
+
+    // Fonction pour formater les nombres
+    function formatNumber(num) {
+      return new Intl.NumberFormat('fr-FR').format(num);
+    }
+
+    // Fonction pour formater les dates
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-FR');
+    }
+
+    // Fonction pour obtenir le statut en français
+    function getStatusText(status) {
+      const statusMap = {
+        'vip': 'VIP',
+        'nouveau': 'Nouveau',
+        'premium': 'Premium',
+        'normal': 'Normal'
+      };
+      return statusMap[status] || status;
+    }
+
+    // Mise à jour des statistiques
+    function updateStats() {
+      const totalClients = clientsData.length;
+      const vipClients = clientsData.filter(c => c.statut === 'vip').length;
+      const newClients = clientsData.filter(c => {
+        const date = new Date(c.dateInscription);
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 30;
+      }).length;
+
+      document.getElementById('totalClients').textContent = formatNumber(totalClients);
+      document.getElementById('vipClients').textContent = formatNumber(vipClients);
+      document.getElementById('newClients').textContent = formatNumber(newClients);
+    }
+
+    // Affichage des clients
+    function renderClients(clients = clientsData) {
+      const grid = document.getElementById('clientsGrid');
+      grid.innerHTML = '';
+
+      clients.forEach(client => {
+        const card = document.createElement('div');
+        card.className = 'client-card';
+        card.innerHTML = `
+          <div class="client-header">
+            <img src="${client.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'}" alt="${client.nom}" class="client-avatar">
+            <div class="client-info">
+              <h4>${client.nom} ${client.prenom || ''}</h4>
+              <p>${client.email}</p>
+              <p>${client.telephone}</p>
+            </div>
+          </div>
+          <div class="client-badges">
+            <span class="badge ${client.statut}">${getStatusText(client.statut)}</span>
+            <span class="badge">${client.commandes || 0} commandes</span>
+          </div>
+          <div class="client-actions">
+            <button class="btn btn-secondary" onclick="editClient(${client.id})">
+              <i class="fa-solid fa-edit"></i>
+              Modifier
+            </button>
+            <button class="btn btn-primary" onclick="viewClient(${client.id})">
+              <i class="fa-solid fa-eye"></i>
+              Voir
+            </button>
+            <button class="btn btn-danger" onclick="deleteClient(${client.id})">
+              <i class="fa-solid fa-trash"></i>
+              Supprimer
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Filtrage des clients
+    function filterClients() {
+      const searchTerm = document.getElementById('searchClient').value.toLowerCase();
+      const statusFilter = document.getElementById('filterStatus').value;
+
+      let filteredClients = clientsData.filter(client => {
+        const matchesSearch = client.nom.toLowerCase().includes(searchTerm) ||
+                            (client.prenom || '').toLowerCase().includes(searchTerm) ||
+                            client.email.toLowerCase().includes(searchTerm) ||
+                            client.telephone.includes(searchTerm);
+        const matchesStatus = !statusFilter || client.statut === statusFilter;
+        
+        return matchesSearch && matchesStatus;
+      });
+
+      renderClients(filteredClients);
+    }
+
+    // Tri des clients
+    function sortClients() {
+      const sortBy = document.getElementById('sortBy').value;
+      let sortedClients = [...clientsData];
+
+      switch(sortBy) {
+        case 'nom':
+          sortedClients.sort((a, b) => a.nom.localeCompare(b.nom));
+          break;
+        case 'date':
+          sortedClients.sort((a, b) => new Date(a.dateInscription) - new Date(b.dateInscription));
+          break;
+        case 'commandes':
+          sortedClients.sort((a, b) => (b.commandes || 0) - (a.commandes || 0));
+          break;
+      }
+
+      renderClients(sortedClients);
+    }
+
+    // Fonctions modales
+    function showModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    }
+
+    function hideModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    // Fonction pour basculer la sidebar sur mobile
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('active');
+    }
+
+    // Fonction de déconnexion
+    function logout() {
+      if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      }
+    }
+
+    // Fonctions CRUD
+    function editClient(id) {
+      const client = clientsData.find(c => c.id === id);
+      if (client) {
+        document.getElementById('modalTitle').textContent = 'Modifier Client';
+        document.getElementById('clientNom').value = client.nom;
+        document.getElementById('clientPrenom').value = client.prenom;
+        document.getElementById('clientEmail').value = client.email;
+        document.getElementById('clientTel').value = client.telephone;
+        document.getElementById('clientAdresse').value = client.adresse;
+        document.getElementById('clientStatut').value = client.statut;
+        showModal('addClientModal');
+      }
+    }
+
+    function viewClient(id) {
+      const client = clientsData.find(c => c.id === id);
+      if (client) {
+        alert(`Détails du client ${client.nom} ${client.prenom || ''}\nEmail: ${client.email}\nTéléphone: ${client.telephone}\nAdresse: ${client.adresse}\nStatut: ${getStatusText(client.statut)}\nCommandes: ${client.commandes || 0}\nDate d'inscription: ${formatDate(client.dateInscription)}`);
+      }
+    }
+
+    function deleteClient(id) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
+        clientsData = clientsData.filter(c => c.id !== id);
+        localStorage.setItem('clients', JSON.stringify(clientsData));
+        updateStats();
+        renderClients();
+      }
+    }
+
+    // Gestion du formulaire
+    document.getElementById('clientForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const clientData = {
+        id: Date.now(), // ID unique
+        nom: document.getElementById('clientNom').value,
+        prenom: document.getElementById('clientPrenom').value,
+        email: document.getElementById('clientEmail').value,
+        telephone: document.getElementById('clientTel').value,
+        adresse: document.getElementById('clientAdresse').value,
+        statut: document.getElementById('clientStatut').value,
+        dateInscription: new Date().toISOString().split('T')[0],
+        commandes: 0,
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+      };
+
+      clientsData.push(clientData);
+      localStorage.setItem('clients', JSON.stringify(clientsData));
+      
+      updateStats();
+      renderClients();
+      hideModal('addClientModal');
+      document.getElementById('clientForm').reset();
+      document.getElementById('modalTitle').textContent = 'Nouveau Client';
+      
+      // Afficher une notification de succès
+      showNotification('Client ajouté avec succès !');
+    });
+
+    // Fonction pour afficher une notification
+    function showNotification(message, type = 'success') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : '#ef4444'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Initialisation
+    function initClients() {
+      checkAuth();
+      loadClients();
+    }
+
+    // Chargement au démarrage
+    document.addEventListener('DOMContentLoaded', initClients);
+
+    // Export CSV
+    function exportToCSV() {
+      const csvContent = "data:text/csv;charset=utf-8," 
+        + "ID,Nom,Prénom,Email,Téléphone,Adresse,Statut,Date d'inscription,Commandes\n"
+        + clientsData.map(c => 
+            `${c.id},"${c.nom}","${c.prenom || ''}","${c.email}","${c.telephone}","${c.adresse}","${c.statut}","${c.dateInscription}",${c.commandes || 0}`
+          ).join("\n");
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `clients_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html> 

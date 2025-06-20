@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Ordexa - Gestion des Commandes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #f59e42;
+      --info: #0ea5e9;
+      --sidebar-width: 230px;
+      --bg: #f6f8fa;
+      --card-bg: #ffffff;
+      --card-shadow: 0 2px 8px rgba(44,62,80,0.07);
+      --border: #e5e7eb;
+      --text-secondary: #666;
+      --transition: all 0.2s ease;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: #222;
+      min-height: 100vh;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar .logo {
+      display: flex;
+      align-items: center;
+      padding: 1.2rem 1.5rem 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .sidebar .logo img {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    
+    .sidebar .logo span {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+    
+    .sidebar nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-top: 1.5rem;
+    }
+    
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      padding: 0.9rem 1.5rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 1rem;
+      border-left: 4px solid transparent;
+      transition: var(--transition);
+    }
+    
+    .sidebar nav a.active, .sidebar nav a:hover {
+      background: var(--bg);
+      color: var(--primary);
+      border-left: 4px solid var(--primary);
+    }
+    
+    .sidebar nav a i {
+      margin-right: 1rem;
+      font-size: 1.2em;
+    }
+    
+    .sidebar .logout {
+      margin: 1.5rem;
+      padding: 0.7rem 0;
+      border-top: 1px solid var(--border);
+      color: var(--danger);
+      background: none;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    
+    .sidebar .logout i {
+      margin-right: 0.7rem;
+    }
+    
+    /* Main */
+    .main {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      padding: 0;
+      transition: var(--transition);
+    }
+    
+    /* Header */
+    .header {
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .header .menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--primary);
+      cursor: pointer;
+      margin-right: 1rem;
+    }
+    
+    .header .user {
+      display: flex;
+      align-items: center;
+    }
+    
+    .header .user img {
+      width: 36px; height: 36px; border-radius: 50%; margin-left: 1rem;
+    }
+    
+    /* Commandes Content */
+    .commandes-content {
+      padding: 2rem 2.5rem;
+    }
+    
+    .commandes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-radius: 16px;
+      padding: 2rem;
+      color: white;
+      box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+    }
+    
+    .commandes-header h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .commandes-header .btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+    
+    .commandes-header .btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--card-shadow);
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(44, 62, 80, 0.15);
+    }
+    
+    .stat-card h3 {
+      font-size: 1.1rem;
+      color: var(--primary-dark);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .stat-card .value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-card .label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    /* Filters */
+    .filters {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border);
+    }
+    
+    .filters h3 {
+      font-size: 1.2rem;
+      color: var(--primary-dark);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .filters-content {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .filter-group label {
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    
+    .filter-group select,
+    .filter-group input {
+      padding: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    
+    /* Orders Table */
+    .orders-table {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    
+    .orders-table h3 {
+      font-size: 1.2rem;
+      color: var(--primary-dark);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    th {
+      background: #f8f9fa;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    tr:hover {
+      background: #f8f9fa;
+    }
+    
+    .status {
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    
+    .status.livree {
+      background: #dcfce7;
+      color: var(--success);
+    }
+    
+    .status.encours {
+      background: #fef3c7;
+      color: var(--warning);
+    }
+    
+    .status.annulee {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+    
+    .order-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      text-decoration: none;
+    }
+    
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .modal-header h3 {
+      color: var(--primary-dark);
+      font-size: 1.3rem;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 0.7rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+    
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 900px) {
+      .main { margin-left: 0; }
+      .sidebar { left: -100vw; }
+      .sidebar.active { left: 0; }
+      .header .menu-btn { display: inline-block; }
+      .filters-content { flex-direction: column; align-items: stretch; }
+    }
+    
+    @media (max-width: 600px) {
+      .commandes-content { padding: 1rem; }
+      .commandes-header { flex-direction: column; gap: 1rem; text-align: center; }
+      th, td { padding: 0.5rem; }
+    }
+
+    /* Animation pour les notifications */
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="logo">
+      <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop&crop=center" alt="Logo">
+      <span>Ordexa</span>
+    </div>
+    <nav>
+      <a href="page2.html">
+        <i class="fa-solid fa-gauge"></i>
+        Tableau de bord
+      </a>
+      <a href="client.html">
+        <i class="fa-solid fa-users"></i>
+        Clients
+      </a>
+      <a href="produits.html">
+        <i class="fa-solid fa-box"></i>
+        Produits
+      </a>
+      <a href="commandes.html" class="active">
+        <i class="fa-solid fa-cart-shopping"></i>
+        Commandes
+      </a>
+      <a href="stats.html">
+        <i class="fa-solid fa-chart-line"></i>
+        Statistiques
+      </a>
+      <a href="parametres.html">
+        <i class="fa-solid fa-gear"></i>
+        Paramètres
+      </a>
+    </nav>
+    <button class="logout" onclick="logout()">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      Déconnexion
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Header -->
+    <div class="header">
+      <button class="menu-btn" onclick="toggleSidebar()">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="user">
+        <span id="user-name">Mohamed Koné</span>
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="User">
+      </div>
+    </div>
+
+    <!-- Commandes Content -->
+    <div class="commandes-content">
+      <!-- Commandes Header -->
+      <div class="commandes-header">
+        <h1>
+          <i class="fa-solid fa-cart-shopping"></i>
+          Gestion des Commandes
+        </h1>
+        <div style="display: flex; gap: 1rem;">
+          <a href="page2.html" class="btn">
+            <i class="fa-solid fa-home"></i>
+            Tableau de bord
+          </a>
+          <button class="btn" onclick="showModal('addOrderModal')">
+            <i class="fa-solid fa-plus"></i>
+            Nouvelle commande
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>
+            <i class="fa-solid fa-shopping-cart"></i>
+            Total Commandes
+          </h3>
+          <div class="value" id="totalOrders">0</div>
+          <div class="label">Nombre total de commandes</div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>
+            <i class="fa-solid fa-check-circle"></i>
+            Commandes Livrées
+          </h3>
+          <div class="value" id="deliveredOrders">0</div>
+          <div class="label">Commandes terminées</div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>
+            <i class="fa-solid fa-clock"></i>
+            En Cours
+          </h3>
+          <div class="value" id="pendingOrders">0</div>
+          <div class="label">Commandes en traitement</div>
+        </div>
+        
+        <div class="stat-card">
+          <h3>
+            <i class="fa-solid fa-money-bill-wave"></i>
+            Chiffre d'affaires
+          </h3>
+          <div class="value" id="totalRevenue">0 FCFA</div>
+          <div class="label">Revenus totaux</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <h3>
+          <i class="fa-solid fa-filter"></i>
+          Filtres et recherche
+        </h3>
+        <div class="filters-content">
+          <div class="filter-group">
+            <label>Rechercher :</label>
+            <input type="text" id="searchOrder" class="form-control" placeholder="ID, client, produit..." oninput="filterOrders()">
+          </div>
+          <div class="filter-group">
+            <label>Statut :</label>
+            <select id="filterStatus" onchange="filterOrders()">
+              <option value="">Tous</option>
+              <option value="livree">Livrées</option>
+              <option value="encours">En cours</option>
+              <option value="annulee">Annulées</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Date :</label>
+            <input type="date" id="filterDate" onchange="filterOrders()">
+          </div>
+          <div class="filter-group">
+            <button class="btn btn-secondary" onclick="exportToCSV()">
+              <i class="fa-solid fa-download"></i>
+              Exporter CSV
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="orders-table">
+        <h3>
+          <i class="fa-solid fa-list"></i>
+          Liste des commandes
+        </h3>
+        <table id="ordersTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Client</th>
+              <th>Date</th>
+              <th>Produits</th>
+              <th>Total</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+            <!-- Les commandes seront chargées ici -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ajout/Modification Commande -->
+  <div class="modal" id="addOrderModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Nouvelle Commande</h3>
+        <button class="modal-close" onclick="hideModal('addOrderModal')">&times;</button>
+      </div>
+      <form id="orderForm">
+        <div class="form-group">
+          <label for="orderClient">Client *</label>
+          <select id="orderClient" class="form-control" required>
+            <option value="">Sélectionner un client</option>
+            <option value="Fanta Diarra">Fanta Diarra</option>
+            <option value="Moussa Keita">Moussa Keita</option>
+            <option value="Aminata Traoré">Aminata Traoré</option>
+            <option value="Fatoumata Koné">Fatoumata Koné</option>
+            <option value="Ousmane Coulibaly">Ousmane Coulibaly</option>
+            <option value="Mariam Sangaré">Mariam Sangaré</option>
+            <option value="Boubacar Diallo">Boubacar Diallo</option>
+            <option value="Aïcha Ballo">Aïcha Ballo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="orderDate">Date *</label>
+          <input type="date" id="orderDate" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="orderStatus">Statut *</label>
+          <select id="orderStatus" class="form-control" required>
+            <option value="en attente">En attente</option>
+            <option value="en cours">En cours</option>
+            <option value="livrée">Livrée</option>
+            <option value="annulée">Annulée</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="orderProducts">Produits</label>
+          <select id="orderProducts" class="form-control" multiple>
+            <option value="Riz Basmati Premium">Riz Basmati Premium</option>
+            <option value="Huile d'Arachide Pure">Huile d'Arachide Pure</option>
+            <option value="Téléphone Samsung Galaxy">Téléphone Samsung Galaxy</option>
+            <option value="Tissu Wax Africain">Tissu Wax Africain</option>
+            <option value="Ciment Portland">Ciment Portland</option>
+            <option value="Lait en Poudre">Lait en Poudre</option>
+            <option value="Ordinateur Portable HP">Ordinateur Portable HP</option>
+            <option value="Savon de Marseille">Savon de Marseille</option>
+          </select>
+          <small style="color: var(--text-secondary);">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs produits</small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('addOrderModal')">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Facture -->
+  <div class="modal" id="invoiceModal">
+    <div class="modal-content" id="invoiceContent">
+      <div class="modal-header">
+        <h3>Facture</h3>
+        <button class="modal-close" onclick="hideModal('invoiceModal')">&times;</button>
+      </div>
+      <div id="invoiceBody">
+        <!-- Contenu de la facture généré dynamiquement -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('invoiceModal')">Fermer</button>
+        <button class="btn btn-primary" onclick="printInvoice()"><i class="fa-solid fa-print"></i> Imprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration de l'API
+    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    let commandesData = [];
+    let clientsData = [];
+    let productsData = [];
+    let currentUser = null;
+
+    // Données de test pour les commandes
+    const initialCommandesData = [
+      {
+        id: 1,
+        numero: "CMD-2024-001",
+        client: "Fanta Diarra",
+        clientId: 1,
+        date: "2024-06-15",
+        statut: "livrée",
+        total: 125000,
+        produits: [
+          { nom: "Téléphone Samsung Galaxy", quantite: 1, prix: 125000 }
+        ]
+      },
+      {
+        id: 2,
+        numero: "CMD-2024-002",
+        client: "Moussa Keita",
+        clientId: 2,
+        date: "2024-06-16",
+        statut: "en cours",
+        total: 8500,
+        produits: [
+          { nom: "Ciment Portland", quantite: 1, prix: 8500 }
+        ]
+      },
+      {
+        id: 3,
+        numero: "CMD-2024-003",
+        client: "Aminata Traoré",
+        clientId: 3,
+        date: "2024-06-17",
+        statut: "livrée",
+        total: 7000,
+        produits: [
+          { nom: "Riz Basmati Premium", quantite: 2, prix: 5000 },
+          { nom: "Huile d'Arachide Pure", quantite: 1, prix: 1800 }
+        ]
+      },
+      {
+        id: 4,
+        numero: "CMD-2024-004",
+        client: "Fatoumata Koné",
+        clientId: 4,
+        date: "2024-06-18",
+        statut: "en attente",
+        total: 3600,
+        produits: [
+          { nom: "Tissu Wax Africain", quantite: 1, prix: 3500 },
+          { nom: "Savon de Marseille", quantite: 1, prix: 800 }
+        ]
+      },
+      {
+        id: 5,
+        numero: "CMD-2024-005",
+        client: "Ousmane Coulibaly",
+        clientId: 5,
+        date: "2024-06-19",
+        statut: "livrée",
+        total: 2400,
+        produits: [
+          { nom: "Lait en Poudre", quantite: 2, prix: 2400 }
+        ]
+      },
+      {
+        id: 6,
+        numero: "CMD-2024-006",
+        client: "Mariam Sangaré",
+        clientId: 6,
+        date: "2024-06-20",
+        statut: "en cours",
+        total: 450000,
+        produits: [
+          { nom: "Ordinateur Portable HP", quantite: 1, prix: 450000 }
+        ]
+      },
+      {
+        id: 7,
+        numero: "CMD-2024-007",
+        client: "Boubacar Diallo",
+        clientId: 7,
+        date: "2024-06-21",
+        statut: "en attente",
+        total: 4300,
+        produits: [
+          { nom: "Riz Basmati Premium", quantite: 1, prix: 2500 },
+          { nom: "Huile d'Arachide Pure", quantite: 1, prix: 1800 }
+        ]
+      },
+      {
+        id: 8,
+        numero: "CMD-2024-008",
+        client: "Aïcha Ballo",
+        clientId: 8,
+        date: "2024-06-22",
+        statut: "livrée",
+        total: 1600,
+        produits: [
+          { nom: "Savon de Marseille", quantite: 2, prix: 1600 }
+        ]
+      }
+    ];
+
+    // Vérification de l'authentification
+    function checkAuth() {
+      const token = localStorage.getItem('jwtToken');
+      const user = localStorage.getItem('user');
+      
+      if (!token || !user) {
+        window.location.href = 'page1.html';
+        return;
+      }
+      
+      try {
+        currentUser = JSON.parse(user);
+      } catch (e) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      }
+    }
+
+    // Charger les commandes depuis localStorage
+    function loadCommandes() {
+      const storedCommandes = localStorage.getItem('commandes');
+      if (storedCommandes) {
+        commandesData = JSON.parse(storedCommandes);
+      } else {
+        commandesData = [...initialCommandesData];
+        localStorage.setItem('commandes', JSON.stringify(commandesData));
+      }
+      updateStats();
+      renderCommandes();
+    }
+
+    // Fonction pour formater les nombres
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    // Fonction pour formater les montants
+    function formatAmount(amount) {
+      return formatNumber(amount) + " FCFA";
+    }
+
+    // Fonction pour formater les dates
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-FR');
+    }
+
+    // Fonction pour obtenir le statut en français
+    function getStatusText(status) {
+      const statusMap = {
+        'livree': 'Livrée',
+        'encours': 'En cours',
+        'annulee': 'Annulée'
+      };
+      return statusMap[status] || status;
+    }
+
+    // Mise à jour des statistiques
+    function updateStats() {
+      const totalOrders = commandesData.length;
+      const deliveredOrders = commandesData.filter(o => o.statut === 'livrée').length;
+      const pendingOrders = commandesData.filter(o => o.statut === 'en cours').length;
+      const totalRevenue = commandesData.reduce((sum, order) => sum + (order.total || 0), 0);
+
+      document.getElementById('totalOrders').textContent = formatNumber(totalOrders);
+      document.getElementById('deliveredOrders').textContent = formatNumber(deliveredOrders);
+      document.getElementById('pendingOrders').textContent = formatNumber(pendingOrders);
+      document.getElementById('totalRevenue').textContent = formatAmount(totalRevenue);
+    }
+
+    // Affichage des commandes
+    function renderCommandes(orders = commandesData) {
+      const tbody = document.getElementById('ordersTableBody');
+      tbody.innerHTML = '';
+
+      orders.forEach(order => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${order.numero}</td>
+          <td>${order.client}</td>
+          <td>${formatDate(order.date)}</td>
+          <td>${order.produits?.map(p => p.nom).join(', ') || 'Aucun produit'}</td>
+          <td>${formatAmount(order.total)}</td>
+          <td><span class="badge ${order.statut}">${getStatusText(order.statut)}</span></td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-sm btn-primary" onclick="viewOrder(${order.id})" title="Voir">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="editOrder(${order.id})" title="Modifier">
+                <i class="fa-solid fa-edit"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteOrder(${order.id})" title="Supprimer">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+              <button class="btn btn-sm btn-success" onclick="showInvoice(${order.id})" title="Facture">
+                <i class="fa-solid fa-file-invoice"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Filtrage des commandes
+    function filterOrders() {
+      const searchTerm = document.getElementById('searchOrder').value.toLowerCase();
+      const statusFilter = document.getElementById('filterStatus').value;
+      const dateFilter = document.getElementById('filterDate').value;
+
+      let filteredOrders = commandesData.filter(order => {
+        const matchesSearch = order.numero.toLowerCase().includes(searchTerm) ||
+                            order.client.toLowerCase().includes(searchTerm) ||
+                            (order.produits?.map(p => p.nom).join(', ') || '').toLowerCase().includes(searchTerm);
+        const matchesStatus = !statusFilter || order.statut === statusFilter;
+        const matchesDate = !dateFilter || order.date === dateFilter;
+        
+        return matchesSearch && matchesStatus && matchesDate;
+      });
+
+      renderCommandes(filteredOrders);
+    }
+
+    // Fonctions modales
+    function showModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+      if(modalId === 'addOrderModal') loadFormData();
+    }
+
+    function hideModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+      document.getElementById('orderForm').reset();
+    }
+
+    // Chargement des données du formulaire
+    function loadFormData() {
+      const clientSelect = document.getElementById('orderClient');
+      const productSelect = document.getElementById('orderProducts');
+      
+      // Charger les clients
+      clientSelect.innerHTML = '<option value="">Sélectionner un client</option>';
+      clientsData.forEach(client => {
+        const option = document.createElement('option');
+        option.value = client.id;
+        option.textContent = client.nom;
+        clientSelect.appendChild(option);
+      });
+      
+      // Charger les produits
+      productSelect.innerHTML = '';
+      productsData.forEach(product => {
+        const option = document.createElement('option');
+        option.value = product.id;
+        option.textContent = `${product.nom} - ${formatAmount(product.prix)}`;
+        productSelect.appendChild(option);
+      });
+    }
+
+    // Fonction pour basculer la sidebar sur mobile
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('active');
+    }
+
+    // Fonction de déconnexion
+    function logout() {
+      if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      }
+    }
+
+    // Fonctions CRUD
+    function viewOrder(id) {
+      const order = commandesData.find(o => o.id === id);
+      if (order) {
+        const produits = order.produits?.map(p => p.nom).join(', ') || 'Aucun produit';
+        alert(`Détails de la commande ${order.numero}\nClient: ${order.client}\nDate: ${formatDate(order.date)}\nProduits: ${produits}\nTotal: ${formatAmount(order.total)}\nStatut: ${getStatusText(order.statut)}`);
+      }
+    }
+
+    function editOrder(id) {
+      const order = commandesData.find(o => o.id === id);
+      if (order) {
+        document.getElementById('modalTitle').textContent = 'Modifier Commande';
+        document.getElementById('orderClient').value = order.client;
+        document.getElementById('orderDate').value = order.date;
+        document.getElementById('orderStatus').value = order.statut;
+        showModal('addOrderModal');
+      }
+    }
+
+    function deleteOrder(id) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+        commandesData = commandesData.filter(o => o.id !== id);
+        localStorage.setItem('commandes', JSON.stringify(commandesData));
+        updateStats();
+        renderCommandes();
+      }
+    }
+
+    // Export CSV
+    function exportToCSV() {
+      const csvContent = "data:text/csv;charset=utf-8," 
+        + "Numéro,Client,Date,Produits,Total,Statut\n"
+        + commandesData.map(o => 
+            `${o.numero},${o.client},${o.date},"${o.produits?.map(p => p.nom).join('; ') || 'Aucun produit'}",${o.total || 0},${getStatusText(o.statut)}`
+          ).join("\n");
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `commandes_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Gestion du formulaire
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const selectedProducts = Array.from(document.getElementById('orderProducts').selectedOptions).map(opt => opt.value);
+      const produits = selectedProducts.map(nom => ({
+        nom: nom,
+        quantite: 1,
+        prix: 1000 // Prix par défaut
+      }));
+      
+      const total = produits.reduce((sum, p) => sum + p.prix, 0);
+      
+      const orderData = {
+        id: Date.now(), // ID unique
+        numero: `CMD-2024-${String(commandesData.length + 1).padStart(3, '0')}`,
+        client: document.getElementById('orderClient').value,
+        date: document.getElementById('orderDate').value,
+        statut: document.getElementById('orderStatus').value,
+        total: total,
+        produits: produits
+      };
+
+      commandesData.push(orderData);
+      localStorage.setItem('commandes', JSON.stringify(commandesData));
+      
+      updateStats();
+      renderCommandes();
+      hideModal('addOrderModal');
+      document.getElementById('orderForm').reset();
+      document.getElementById('modalTitle').textContent = 'Nouvelle Commande';
+      
+      // Afficher une notification de succès
+      showNotification('Commande ajoutée avec succès !');
+    });
+
+    // Initialisation
+    function initCommandes() {
+      checkAuth();
+      loadCommandes();
+      
+      // Initialiser la date par défaut
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('orderDate').value = today;
+    }
+
+    // Chargement au démarrage
+    document.addEventListener('DOMContentLoaded', initCommandes);
+
+    // Facture : affichage et impression
+    function showInvoice(id) {
+      const order = commandesData.find(o => o.id === id);
+      if (!order) return;
+      
+      const produitsHtml = order.produits?.map(p => 
+        `<tr><td>${p.nom || 'Produit inconnu'}</td><td>${p.quantite || 1}</td><td>${formatAmount(p.prix)}</td><td>${formatAmount((p.prix || 0) * (p.quantite || 1))}</td></tr>`
+      ).join('') || '<tr><td>Aucun produit</td><td>0</td><td>0</td><td>0</td></tr>';
+      
+      const html = `
+        <div style="text-align:center;margin-bottom:1.5rem;">
+          <h2 style="color:var(--primary-dark);margin-bottom:0.2em;">Facture</h2>
+          <div style="color:#888;font-size:1.1em;">N° ${order.numero} - ${formatDate(order.date)}</div>
+        </div>
+        <div style="margin-bottom:1.2rem;">
+          <strong>Client :</strong> ${order.client || 'Client inconnu'}<br>
+          <strong>Date :</strong> ${formatDate(order.date)}<br>
+          <strong>Statut :</strong> ${getStatusText(order.statut)}
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;">
+          <thead>
+            <tr style="background:#f8f9fa;border-bottom:2px solid #dee2e6;">
+              <th style="padding:0.75rem;text-align:left;border-bottom:1px solid #dee2e6;">Produit</th>
+              <th style="padding:0.75rem;text-align:center;border-bottom:1px solid #dee2e6;">Quantité</th>
+              <th style="padding:0.75rem;text-align:right;border-bottom:1px solid #dee2e6;">Prix unitaire</th>
+              <th style="padding:0.75rem;text-align:right;border-bottom:1px solid #dee2e6;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${produitsHtml}
+          </tbody>
+        </table>
+        <div style="text-align:right;font-size:1.2em;font-weight:bold;border-top:2px solid #dee2e6;padding-top:1rem;">
+          Total : ${formatAmount(order.total)}
+        </div>
+      `;
+      
+      const win = window.open('', '_blank');
+      win.document.write(`
+        <html>
+          <head>
+            <title>Facture ${order.numero}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 2rem; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6; }
+              th { background: #f8f9fa; }
+            </style>
+          </head>
+          <body>${html}</body>
+        </html>
+      `);
+      win.document.close();
+      win.print();
+    }
+    
+    function printInvoice() {
+      const printContents = document.getElementById('invoiceBody').innerHTML;
+      const win = window.open('', '', 'height=700,width=900');
+      win.document.write('<html><head><title>Facture</title>');
+      win.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">');
+      win.document.write('<style>body{font-family:Segoe UI,Arial,sans-serif;padding:2em;}table{width:100%;border-collapse:collapse;}th,td{padding:0.7em;border-bottom:1px solid #eee;}th{background:#f6f8fa;}</style>');
+      win.document.write('</head><body>');
+      win.document.write(printContents);
+      win.document.write('</body></html>');
+      win.document.close();
+      win.print();
+    }
+
+    // Fonction pour afficher une notification
+    function showNotification(message, type = 'success') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : '#ef4444'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+  </script>
+</body>
+</html> 
