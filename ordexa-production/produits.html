@@ -736,8 +736,7 @@
   </div>
 
   <script>
-    // Configuration de l'API
-    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    // Configuration locale (sans API)
     let produitsData = [];
     let currentUser = null;
 
@@ -841,38 +840,104 @@
       }
     ];
 
-    // Vérification de l'authentification
+    // Vérification de l'authentification locale
     function checkAuth() {
       const token = localStorage.getItem('jwtToken');
       const user = localStorage.getItem('user');
       
       if (!token || !user) {
-        window.location.href = 'page1.html';
-        return;
+        // Créer un utilisateur par défaut si aucun n'existe
+        if (!user) {
+          const defaultUser = {
+            nom: "Mohamed Koné",
+            email: "admin@ordexa.ml",
+            role: "admin"
+          };
+          localStorage.setItem('user', JSON.stringify(defaultUser));
+          localStorage.setItem('jwtToken', 'demo-token-123');
+        }
       }
       
       try {
-        currentUser = JSON.parse(user);
+        currentUser = JSON.parse(localStorage.getItem('user'));
       } catch (e) {
-        localStorage.removeItem('jwtToken');
-        localStorage.removeItem('user');
-        window.location.href = 'page1.html';
+        const defaultUser = {
+          nom: "Mohamed Koné",
+          email: "admin@ordexa.ml",
+          role: "admin"
+        };
+        localStorage.setItem('user', JSON.stringify(defaultUser));
+        localStorage.setItem('jwtToken', 'demo-token-123');
+        currentUser = defaultUser;
       }
     }
 
-    // Charger les produits depuis localStorage
+    // Fonctions de gestion locale des données
     function loadProduits() {
-      const storedProduits = localStorage.getItem('produits');
-      if (storedProduits) {
-        produitsData = JSON.parse(storedProduits);
-      } else {
-        // Forcer l'initialisation des données de test
+      console.log('Chargement des produits depuis localStorage...');
+      const stored = localStorage.getItem('produitsData');
+      
+      if (!stored) {
+        console.log('Aucune donnée trouvée, initialisation avec les données de test...');
         produitsData = [...initialProduitsData];
-        localStorage.setItem('produits', JSON.stringify(produitsData));
+        localStorage.setItem('produitsData', JSON.stringify(produitsData));
+      } else {
+        try {
+          produitsData = JSON.parse(stored);
+          console.log('Données produits chargées:', produitsData.length, 'produits');
+        } catch (e) {
+          console.error('Erreur lors du chargement des produits:', e);
+          produitsData = [...initialProduitsData];
+          localStorage.setItem('produitsData', JSON.stringify(produitsData));
+        }
       }
-      updateStats();
+      
       renderProduits();
-      console.log('Produits chargés:', produitsData.length); // Debug
+    }
+
+    function saveProduits() {
+      localStorage.setItem('produitsData', JSON.stringify(produitsData));
+      console.log('Produits sauvegardés:', produitsData.length, 'produits');
+    }
+
+    function addProduit(produit) {
+      const newId = Math.max(...produitsData.map(p => p.id), 0) + 1;
+      const newProduit = {
+        ...produit,
+        id: newId,
+        dateAjout: new Date().toISOString().split('T')[0],
+        statut: "disponible",
+        image: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?w=300&h=200&fit=crop`
+      };
+      
+      produitsData.push(newProduit);
+      saveProduits();
+      renderProduits();
+      showNotification('Produit ajouté avec succès!', 'success');
+    }
+
+    function updateProduit(id, updatedProduit) {
+      const index = produitsData.findIndex(p => p.id === id);
+      if (index !== -1) {
+        produitsData[index] = { ...produitsData[index], ...updatedProduit };
+        saveProduits();
+        renderProduits();
+        showNotification('Produit modifié avec succès!', 'success');
+      }
+    }
+
+    function deleteProduit(id) {
+      produitsData = produitsData.filter(p => p.id !== id);
+      saveProduits();
+      renderProduits();
+      showNotification('Produit supprimé avec succès!', 'success');
+    }
+
+    function resetToTestData() {
+      produitsData = [...initialProduitsData];
+      saveProduits();
+      renderProduits();
+      showNotification('Données de test restaurées!', 'success');
     }
 
     // Fonction pour formater les nombres
@@ -1030,15 +1095,6 @@
       }
     }
 
-    function deleteProduct(id) {
-      if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
-        produitsData = produitsData.filter(p => p.id !== id);
-        localStorage.setItem('produits', JSON.stringify(produitsData));
-        updateStats();
-        renderProduits();
-      }
-    }
-
     // Export CSV
     function exportToCSV() {
       const csvContent = "data:text/csv;charset=utf-8," 
@@ -1073,17 +1129,7 @@
         image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=200&fit=crop"
       };
 
-      produitsData.push(productData);
-      localStorage.setItem('produits', JSON.stringify(produitsData));
-      
-      updateStats();
-      renderProduits();
-      hideModal('addProductModal');
-      document.getElementById('productForm').reset();
-      document.getElementById('modalTitle').textContent = 'Nouveau Produit';
-      
-      // Afficher une notification de succès
-      showNotification('Produit ajouté avec succès !');
+      addProduit(productData);
     });
 
     // Fonction pour afficher une notification
@@ -1117,7 +1163,7 @@
         localStorage.removeItem('clients');
         localStorage.removeItem('produits');
         localStorage.removeItem('commandes');
-        loadProduits();
+        resetToTestData();
         showNotification('Données réinitialisées avec succès !');
       }
     }
@@ -1128,7 +1174,7 @@
       
       // Forcer l'affichage des données de test
       produitsData = [...initialProduitsData];
-      localStorage.setItem('produits', JSON.stringify(produitsData));
+      localStorage.setItem('produitsData', JSON.stringify(produitsData));
       
       updateStats();
       renderProduits();

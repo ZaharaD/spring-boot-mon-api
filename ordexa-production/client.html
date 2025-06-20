@@ -731,8 +731,7 @@
   </div>
 
   <script>
-    // Configuration de l'API
-    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    // Configuration locale (sans API)
     let clientsData = [];
     let currentUser = null;
 
@@ -836,38 +835,104 @@
       }
     ];
 
-    // Vérification de l'authentification
+    // Vérification de l'authentification locale
     function checkAuth() {
       const token = localStorage.getItem('jwtToken');
       const user = localStorage.getItem('user');
       
       if (!token || !user) {
-        window.location.href = 'page1.html';
-        return;
+        // Créer un utilisateur par défaut si aucun n'existe
+        if (!user) {
+          const defaultUser = {
+            nom: "Mohamed Koné",
+            email: "admin@ordexa.ml",
+            role: "admin"
+          };
+          localStorage.setItem('user', JSON.stringify(defaultUser));
+          localStorage.setItem('jwtToken', 'demo-token-123');
+        }
       }
       
       try {
-        currentUser = JSON.parse(user);
+        currentUser = JSON.parse(localStorage.getItem('user'));
       } catch (e) {
-        localStorage.removeItem('jwtToken');
-        localStorage.removeItem('user');
-        window.location.href = 'page1.html';
+        const defaultUser = {
+          nom: "Mohamed Koné",
+          email: "admin@ordexa.ml",
+          role: "admin"
+        };
+        localStorage.setItem('user', JSON.stringify(defaultUser));
+        localStorage.setItem('jwtToken', 'demo-token-123');
+        currentUser = defaultUser;
       }
     }
 
-    // Charger les clients depuis localStorage
+    // Fonctions de gestion locale des données
     function loadClients() {
-      const storedClients = localStorage.getItem('clients');
-      if (storedClients) {
-        clientsData = JSON.parse(storedClients);
-      } else {
-        // Forcer l'initialisation des données de test
+      console.log('Chargement des clients depuis localStorage...');
+      const stored = localStorage.getItem('clientsData');
+      
+      if (!stored) {
+        console.log('Aucune donnée trouvée, initialisation avec les données de test...');
         clientsData = [...initialClientsData];
-        localStorage.setItem('clients', JSON.stringify(clientsData));
+        localStorage.setItem('clientsData', JSON.stringify(clientsData));
+      } else {
+        try {
+          clientsData = JSON.parse(stored);
+          console.log('Données clients chargées:', clientsData.length, 'clients');
+        } catch (e) {
+          console.error('Erreur lors du chargement des clients:', e);
+          clientsData = [...initialClientsData];
+          localStorage.setItem('clientsData', JSON.stringify(clientsData));
+        }
       }
-      updateStats();
+      
       renderClients();
-      console.log('Clients chargés:', clientsData.length); // Debug
+    }
+
+    function saveClients() {
+      localStorage.setItem('clientsData', JSON.stringify(clientsData));
+      console.log('Clients sauvegardés:', clientsData.length, 'clients');
+    }
+
+    function addClient(client) {
+      const newId = Math.max(...clientsData.map(c => c.id), 0) + 1;
+      const newClient = {
+        ...client,
+        id: newId,
+        dateInscription: new Date().toISOString().split('T')[0],
+        commandes: 0,
+        avatar: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?w=150&h=150&fit=crop&crop=face`
+      };
+      
+      clientsData.push(newClient);
+      saveClients();
+      renderClients();
+      showNotification('Client ajouté avec succès!', 'success');
+    }
+
+    function updateClient(id, updatedClient) {
+      const index = clientsData.findIndex(c => c.id === id);
+      if (index !== -1) {
+        clientsData[index] = { ...clientsData[index], ...updatedClient };
+        saveClients();
+        renderClients();
+        showNotification('Client modifié avec succès!', 'success');
+      }
+    }
+
+    function deleteClient(id) {
+      clientsData = clientsData.filter(c => c.id !== id);
+      saveClients();
+      renderClients();
+      showNotification('Client supprimé avec succès!', 'success');
+    }
+
+    function resetToTestData() {
+      clientsData = [...initialClientsData];
+      saveClients();
+      renderClients();
+      showNotification('Données de test restaurées!', 'success');
     }
 
     // Fonction pour formater les nombres
@@ -1033,43 +1098,22 @@
       }
     }
 
-    function deleteClient(id) {
-      if (confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
-        clientsData = clientsData.filter(c => c.id !== id);
-        localStorage.setItem('clients', JSON.stringify(clientsData));
-        updateStats();
-        renderClients();
-      }
-    }
-
     // Gestion du formulaire
     document.getElementById('clientForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
       const clientData = {
-        id: Date.now(), // ID unique
         nom: document.getElementById('clientNom').value,
         prenom: document.getElementById('clientPrenom').value,
         email: document.getElementById('clientEmail').value,
         telephone: document.getElementById('clientTel').value,
         adresse: document.getElementById('clientAdresse').value,
-        statut: document.getElementById('clientStatut').value,
-        dateInscription: new Date().toISOString().split('T')[0],
-        commandes: 0,
-        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+        statut: document.getElementById('clientStatut').value
       };
 
-      clientsData.push(clientData);
-      localStorage.setItem('clients', JSON.stringify(clientsData));
-      
-      updateStats();
-      renderClients();
+      addClient(clientData);
       hideModal('addClientModal');
       document.getElementById('clientForm').reset();
-      document.getElementById('modalTitle').textContent = 'Nouveau Client';
-      
-      // Afficher une notification de succès
-      showNotification('Client ajouté avec succès !');
     });
 
     // Fonction pour afficher une notification
@@ -1103,7 +1147,7 @@
       
       // Forcer l'affichage des données de test
       clientsData = [...initialClientsData];
-      localStorage.setItem('clients', JSON.stringify(clientsData));
+      localStorage.setItem('clientsData', JSON.stringify(clientsData));
       
       updateStats();
       renderClients();
@@ -1133,11 +1177,7 @@
     // Fonction pour réinitialiser les données
     function resetData() {
       if (confirm('Voulez-vous réinitialiser toutes les données avec les données de test ?')) {
-        localStorage.removeItem('clients');
-        localStorage.removeItem('produits');
-        localStorage.removeItem('commandes');
-        loadClients();
-        showNotification('Données réinitialisées avec succès !');
+        resetToTestData();
       }
     }
   </script>

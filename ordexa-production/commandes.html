@@ -750,11 +750,8 @@
   </div>
 
   <script>
-    // Configuration de l'API
-    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    // Configuration locale (sans API)
     let commandesData = [];
-    let clientsData = [];
-    let productsData = [];
     let currentUser = null;
 
     // Données de test pour les commandes
@@ -860,38 +857,104 @@
       }
     ];
 
-    // Vérification de l'authentification
+    // Vérification de l'authentification locale
     function checkAuth() {
       const token = localStorage.getItem('jwtToken');
       const user = localStorage.getItem('user');
       
       if (!token || !user) {
-        window.location.href = 'page1.html';
-        return;
+        // Créer un utilisateur par défaut si aucun n'existe
+        if (!user) {
+          const defaultUser = {
+            nom: "Mohamed Koné",
+            email: "admin@ordexa.ml",
+            role: "admin"
+          };
+          localStorage.setItem('user', JSON.stringify(defaultUser));
+          localStorage.setItem('jwtToken', 'demo-token-123');
+        }
       }
       
       try {
-        currentUser = JSON.parse(user);
+        currentUser = JSON.parse(localStorage.getItem('user'));
       } catch (e) {
-        localStorage.removeItem('jwtToken');
-        localStorage.removeItem('user');
-        window.location.href = 'page1.html';
+        const defaultUser = {
+          nom: "Mohamed Koné",
+          email: "admin@ordexa.ml",
+          role: "admin"
+        };
+        localStorage.setItem('user', JSON.stringify(defaultUser));
+        localStorage.setItem('jwtToken', 'demo-token-123');
+        currentUser = defaultUser;
       }
     }
 
-    // Charger les commandes depuis localStorage
+    // Fonctions de gestion locale des données
     function loadCommandes() {
-      const storedCommandes = localStorage.getItem('commandes');
-      if (storedCommandes) {
-        commandesData = JSON.parse(storedCommandes);
-      } else {
-        // Forcer l'initialisation des données de test
+      console.log('Chargement des commandes depuis localStorage...');
+      const stored = localStorage.getItem('commandesData');
+      
+      if (!stored) {
+        console.log('Aucune donnée trouvée, initialisation avec les données de test...');
         commandesData = [...initialCommandesData];
-        localStorage.setItem('commandes', JSON.stringify(commandesData));
+        localStorage.setItem('commandesData', JSON.stringify(commandesData));
+      } else {
+        try {
+          commandesData = JSON.parse(stored);
+          console.log('Données commandes chargées:', commandesData.length, 'commandes');
+        } catch (e) {
+          console.error('Erreur lors du chargement des commandes:', e);
+          commandesData = [...initialCommandesData];
+          localStorage.setItem('commandesData', JSON.stringify(commandesData));
+        }
       }
-      updateStats();
+      
       renderCommandes();
-      console.log('Commandes chargées:', commandesData.length); // Debug
+    }
+
+    function saveCommandes() {
+      localStorage.setItem('commandesData', JSON.stringify(commandesData));
+      console.log('Commandes sauvegardées:', commandesData.length, 'commandes');
+    }
+
+    function addCommande(commande) {
+      const newId = Math.max(...commandesData.map(c => c.id), 0) + 1;
+      const newCommande = {
+        ...commande,
+        id: newId,
+        numero: `CMD-2024-${String(newId).padStart(3, '0')}`,
+        date: new Date().toISOString().split('T')[0],
+        statut: "en attente"
+      };
+      
+      commandesData.push(newCommande);
+      saveCommandes();
+      renderCommandes();
+      showNotification('Commande ajoutée avec succès!', 'success');
+    }
+
+    function updateCommande(id, updatedCommande) {
+      const index = commandesData.findIndex(c => c.id === id);
+      if (index !== -1) {
+        commandesData[index] = { ...commandesData[index], ...updatedCommande };
+        saveCommandes();
+        renderCommandes();
+        showNotification('Commande modifiée avec succès!', 'success');
+      }
+    }
+
+    function deleteCommande(id) {
+      commandesData = commandesData.filter(c => c.id !== id);
+      saveCommandes();
+      renderCommandes();
+      showNotification('Commande supprimée avec succès!', 'success');
+    }
+
+    function resetToTestData() {
+      commandesData = [...initialCommandesData];
+      saveCommandes();
+      renderCommandes();
+      showNotification('Données de test restaurées!', 'success');
     }
 
     // Fonction pour formater les nombres
@@ -1060,7 +1123,7 @@
     function deleteOrder(id) {
       if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
         commandesData = commandesData.filter(o => o.id !== id);
-        localStorage.setItem('commandes', JSON.stringify(commandesData));
+        localStorage.setItem('commandesData', JSON.stringify(commandesData));
         updateStats();
         renderCommandes();
       }
@@ -1107,7 +1170,7 @@
       };
 
       commandesData.push(orderData);
-      localStorage.setItem('commandes', JSON.stringify(commandesData));
+      localStorage.setItem('commandesData', JSON.stringify(commandesData));
       
       updateStats();
       renderCommandes();
@@ -1125,7 +1188,7 @@
       
       // Forcer l'affichage des données de test
       commandesData = [...initialCommandesData];
-      localStorage.setItem('commandes', JSON.stringify(commandesData));
+      localStorage.setItem('commandesData', JSON.stringify(commandesData));
       
       updateStats();
       renderCommandes();
@@ -1238,7 +1301,7 @@
       if (confirm('Voulez-vous réinitialiser toutes les données avec les données de test ?')) {
         localStorage.removeItem('clients');
         localStorage.removeItem('produits');
-        localStorage.removeItem('commandes');
+        localStorage.removeItem('commandesData');
         loadCommandes();
         showNotification('Données réinitialisées avec succès !');
       }
