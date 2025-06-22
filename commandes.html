@@ -719,66 +719,86 @@
   </div>
 
   <script>
-    // Données de test pour les commandes
-    const ordersData = [
-      {
-        id: "CMD-001",
-        client: "Fatoumata Diallo",
-        date: "2024-01-15",
-        produits: ["Riz local", "Huile de palme"],
-        total: 125000,
-        statut: "livree"
-      },
-      {
-        id: "CMD-002",
-        client: "Moussa Traoré",
-        date: "2024-01-14",
-        produits: ["Tomates fraîches", "Oignons"],
-        total: 89000,
-        statut: "encours"
-      },
-      {
-        id: "CMD-003",
-        client: "Aissata Keita",
-        date: "2024-01-13",
-        produits: ["Poulet local", "Riz local"],
-        total: 156000,
-        statut: "livree"
-      },
-      {
-        id: "CMD-004",
-        client: "Boubacar Coulibaly",
-        date: "2024-01-12",
-        produits: ["Huile de palme"],
-        total: 67000,
-        statut: "encours"
-      },
-      {
-        id: "CMD-005",
-        client: "Mariam Koné",
-        date: "2024-01-11",
-        produits: ["Poulet local", "Tomates fraîches", "Oignons"],
-        total: 234000,
-        statut: "livree"
+    // Configuration de l'API
+    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    let ordersData = [];
+    let clientsData = [];
+    let productsData = [];
+    let currentUser = null;
+
+    // Vérification de l'authentification
+    function checkAuth() {
+      const token = localStorage.getItem('jwtToken');
+      const user = localStorage.getItem('user');
+      
+      if (!token || !user) {
+        window.location.href = 'page1.html';
+        return;
       }
-    ];
+      
+      try {
+        currentUser = JSON.parse(user);
+      } catch (e) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      }
+    }
 
-    // Données de test pour les clients et produits
-    const clientsData = [
-      { id: 1, nom: "Fatoumata Diallo" },
-      { id: 2, nom: "Moussa Traoré" },
-      { id: 3, nom: "Aissata Keita" },
-      { id: 4, nom: "Boubacar Coulibaly" },
-      { id: 5, nom: "Mariam Koné" }
-    ];
+    // Fonction pour faire des appels API avec JWT
+    async function apiCall(endpoint, options = {}) {
+      const token = localStorage.getItem('jwtToken');
+      
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
 
-    const productsData = [
-      { id: 1, nom: "Riz local", prix: 25000 },
-      { id: 2, nom: "Huile de palme", prix: 15000 },
-      { id: 3, nom: "Tomates fraîches", prix: 8000 },
-      { id: 4, nom: "Oignons", prix: 12000 },
-      { id: 5, nom: "Poulet local", prix: 35000 }
-    ];
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...defaultOptions,
+          ...options,
+          headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+          }
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem('jwtToken');
+          localStorage.removeItem('user');
+          window.location.href = 'page1.html';
+          return null;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('API call failed:', error);
+        return null;
+      }
+    }
+
+    // Charger les données depuis l'API
+    async function loadData() {
+      const [orders, clients, products] = await Promise.all([
+        apiCall('/commandes'),
+        apiCall('/clients'),
+        apiCall('/produits')
+      ]);
+
+      if (orders) ordersData = orders;
+      if (clients) clientsData = clients;
+      if (products) productsData = products;
+
+      updateStats();
+      renderOrders();
+    }
 
     // Fonction pour formater les nombres
     function formatNumber(num) {
@@ -811,7 +831,7 @@
       const totalOrders = ordersData.length;
       const deliveredOrders = ordersData.filter(o => o.statut === 'livree').length;
       const pendingOrders = ordersData.filter(o => o.statut === 'encours').length;
-      const totalRevenue = ordersData.reduce((sum, order) => sum + order.total, 0);
+      const totalRevenue = ordersData.reduce((sum, order) => sum + (order.total || 0), 0);
 
       document.getElementById('totalOrders').textContent = formatNumber(totalOrders);
       document.getElementById('deliveredOrders').textContent = formatNumber(deliveredOrders);
@@ -828,10 +848,10 @@
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${order.id}</td>
-          <td>${order.client}</td>
-          <td>${formatDate(order.date)}</td>
-          <td>${order.produits.join(', ')}</td>
-          <td>${formatAmount(order.total)}</td>
+          <td>${order.client?.nom || 'Client inconnu'}</td>
+          <td>${formatDate(order.dateCommande)}</td>
+          <td>${order.lignesCommande?.map(l => l.produit?.nom).join(', ') || 'Aucun produit'}</td>
+          <td>${formatAmount(order.total || 0)}</td>
           <td><span class="status ${order.statut}">${getStatusText(order.statut)}</span></td>
           <td>
             <div class="order-actions">
@@ -863,10 +883,10 @@
 
       let filteredOrders = ordersData.filter(order => {
         const matchesSearch = order.id.toLowerCase().includes(searchTerm) ||
-                            order.client.toLowerCase().includes(searchTerm) ||
-                            order.produits.some(p => p.toLowerCase().includes(searchTerm));
+                            (order.client?.nom || '').toLowerCase().includes(searchTerm) ||
+                            (order.lignesCommande?.map(l => l.produit?.nom).join(', ') || '').toLowerCase().includes(searchTerm);
         const matchesStatus = !statusFilter || order.statut === statusFilter;
-        const matchesDate = !dateFilter || order.date === dateFilter;
+        const matchesDate = !dateFilter || order.dateCommande === dateFilter;
         
         return matchesSearch && matchesStatus && matchesDate;
       });
@@ -918,6 +938,8 @@
     // Fonction de déconnexion
     function logout() {
       if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
         window.location.href = 'page1.html';
       }
     }
@@ -926,7 +948,8 @@
     function viewOrder(id) {
       const order = ordersData.find(o => o.id === id);
       if (order) {
-        alert(`Détails de la commande ${order.id}\nClient: ${order.client}\nDate: ${formatDate(order.date)}\nProduits: ${order.produits.join(', ')}\nTotal: ${formatAmount(order.total)}\nStatut: ${getStatusText(order.statut)}`);
+        const produits = order.lignesCommande?.map(l => l.produit?.nom).join(', ') || 'Aucun produit';
+        alert(`Détails de la commande ${order.id}\nClient: ${order.client?.nom || 'Client inconnu'}\nDate: ${formatDate(order.dateCommande)}\nProduits: ${produits}\nTotal: ${formatAmount(order.total || 0)}\nStatut: ${getStatusText(order.statut)}`);
       }
     }
 
@@ -939,13 +962,14 @@
       }
     }
 
-    function deleteOrder(id) {
+    async function deleteOrder(id) {
       if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
-        const index = ordersData.findIndex(o => o.id === id);
-        if (index > -1) {
-          ordersData.splice(index, 1);
-          renderOrders();
-          updateStats();
+        const success = await apiCall(`/commandes/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (success !== null) {
+          await loadData();
         }
       }
     }
@@ -955,7 +979,7 @@
       const csvContent = "data:text/csv;charset=utf-8," 
         + "ID,Client,Date,Produits,Total,Statut\n"
         + ordersData.map(o => 
-            `${o.id},${o.client},${o.date},"${o.produits.join('; ')}",${o.total},${getStatusText(o.statut)}`
+            `${o.id},${o.client?.nom || 'Client inconnu'},${o.dateCommande},"${o.lignesCommande?.map(l => l.produit?.nom).join('; ') || 'Aucun produit'}",${o.total || 0},${getStatusText(o.statut)}`
           ).join("\n");
       
       const encodedUri = encodeURI(csvContent);
@@ -968,28 +992,42 @@
     }
 
     // Gestion du formulaire
-    document.getElementById('orderForm').addEventListener('submit', function(e) {
+    document.getElementById('orderForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const newOrder = {
-        id: `CMD-${String(ordersData.length + 1).padStart(3, '0')}`,
-        client: document.getElementById('orderClient').options[document.getElementById('orderClient').selectedIndex].text,
-        date: document.getElementById('orderDate').value,
-        produits: Array.from(document.getElementById('orderProducts').selectedOptions).map(opt => opt.text.split(' - ')[0]),
-        total: Math.floor(Math.random() * 200000) + 50000, // Simulation du calcul
-        statut: document.getElementById('orderStatus').value
+      const selectedClientId = document.getElementById('orderClient').value;
+      const selectedProducts = Array.from(document.getElementById('orderProducts').selectedOptions).map(opt => opt.value);
+      
+      if (!selectedClientId || selectedProducts.length === 0) {
+        alert('Veuillez sélectionner un client et au moins un produit');
+        return;
+      }
+
+      const orderData = {
+        clientId: parseInt(selectedClientId),
+        dateCommande: document.getElementById('orderDate').value,
+        statut: document.getElementById('orderStatus').value,
+        lignesCommande: selectedProducts.map(productId => ({
+          produitId: parseInt(productId),
+          quantite: 1
+        }))
       };
 
-      ordersData.push(newOrder);
-      renderOrders();
-      updateStats();
-      hideModal('addOrderModal');
+      const success = await apiCall('/commandes', {
+        method: 'POST',
+        body: JSON.stringify(orderData)
+      });
+
+      if (success !== null) {
+        await loadData();
+        hideModal('addOrderModal');
+      }
     });
 
     // Initialisation
-    function initOrders() {
-      updateStats();
-      renderOrders();
+    async function initOrders() {
+      checkAuth();
+      await loadData();
     }
 
     // Chargement au démarrage
@@ -999,17 +1037,19 @@
     function showInvoice(id) {
       const order = ordersData.find(o => o.id === id);
       if (!order) return;
-      // Générer le HTML de la facture
-      let produitsHtml = order.produits.map(p => `<tr><td>${p}</td><td>1</td></tr>`).join('');
-      // Si on veut les quantités, il faut les stocker dans l'objet commande
+      
+      const produitsHtml = order.lignesCommande?.map(l => 
+        `<tr><td>${l.produit?.nom || 'Produit inconnu'}</td><td>${l.quantite || 1}</td></tr>`
+      ).join('') || '<tr><td>Aucun produit</td><td>0</td></tr>';
+      
       const html = `
         <div style="text-align:center;margin-bottom:1.5rem;">
           <h2 style="color:var(--primary-dark);margin-bottom:0.2em;">Facture</h2>
-          <div style="color:#888;font-size:1.1em;">N° ${order.id} - ${formatDate(order.date)}</div>
+          <div style="color:#888;font-size:1.1em;">N° ${order.id} - ${formatDate(order.dateCommande)}</div>
         </div>
         <div style="margin-bottom:1.2rem;">
-          <strong>Client :</strong> ${order.client}<br>
-          <strong>Date :</strong> ${formatDate(order.date)}<br>
+          <strong>Client :</strong> ${order.client?.nom || 'Client inconnu'}<br>
+          <strong>Date :</strong> ${formatDate(order.dateCommande)}<br>
           <strong>Statut :</strong> ${getStatusText(order.statut)}
         </div>
         <table style="width:100%;border-collapse:collapse;margin-bottom:1.2rem;">
@@ -1024,12 +1064,13 @@
           </tbody>
         </table>
         <div style="text-align:right;font-size:1.2em;margin-top:1.2em;">
-          <strong>Total :</strong> ${formatAmount(order.total)}
+          <strong>Total :</strong> ${formatAmount(order.total || 0)}
         </div>
       `;
       document.getElementById('invoiceBody').innerHTML = html;
       showModal('invoiceModal');
     }
+    
     function printInvoice() {
       const printContents = document.getElementById('invoiceBody').innerHTML;
       const win = window.open('', '', 'height=700,width=900');

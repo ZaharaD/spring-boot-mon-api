@@ -328,6 +328,18 @@
       .dashboard-content { padding: 1rem 0.3rem; }
       .cards { grid-template-columns: 1fr; }
     }
+
+    /* Animation pour les notifications */
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 <body>
@@ -375,7 +387,7 @@
     <div class="header">
       <button class="menu-btn" onclick="toggleSidebar()">
         <i class="fa-solid fa-bars"></i>
-      </button>
+        </button>
       <div class="user">
         <span id="user-name">Mohamed Koné</span>
         <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="User">
@@ -384,6 +396,20 @@
 
     <!-- Dashboard Content -->
     <div class="dashboard-content">
+      <!-- Dashboard Header -->
+      <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 16px; padding: 2rem; color: white; box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);">
+        <h1 style="font-size: 2rem; font-weight: bold; display: flex; align-items: center; gap: 1rem; margin: 0;">
+          <i class="fa-solid fa-gauge"></i>
+          Tableau de bord
+        </h1>
+        <div style="display: flex; gap: 1rem;">
+          <button onclick="refreshDashboard()" style="background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.3); padding: 0.7rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <i class="fa-solid fa-refresh"></i>
+            Actualiser
+          </button>
+        </div>
+      </div>
+
       <!-- Stats Cards -->
       <div class="cards">
         <div class="card">
@@ -396,8 +422,8 @@
             <div class="trend up">
               <i class="fa-solid fa-arrow-up"></i>
               +12% ce mois
-            </div>
           </div>
+        </div>
         </div>
         
         <div class="card">
@@ -410,8 +436,8 @@
             <div class="trend up">
               <i class="fa-solid fa-arrow-up"></i>
               +8% ce mois
-            </div>
           </div>
+        </div>
         </div>
         
         <div class="card">
@@ -424,21 +450,21 @@
             <div class="trend up">
               <i class="fa-solid fa-arrow-up"></i>
               +5% ce mois
-            </div>
           </div>
         </div>
-        
+      </div>
+
         <div class="card">
           <div class="icon orange">
             <i class="fa-solid fa-box"></i>
-          </div>
+        </div>
           <div class="info">
             <div class="label">Produits</div>
             <div class="value" id="totalProduits">0</div>
             <div class="trend down">
               <i class="fa-solid fa-arrow-down"></i>
               -2% ce mois
-            </div>
+        </div>
           </div>
         </div>
       </div>
@@ -497,84 +523,125 @@
   </div>
 
   <script>
-    // Données de test pour le dashboard
-    const dashboardData = {
-      stats: {
-        commandes: 156,
-        chiffreAffaires: 2847500,
-        clients: 89,
-        produits: 45
-      },
-      recentOrders: [
-        {
-          id: "CMD-001",
-          client: "Fatoumata Diallo",
-          date: "2024-01-15",
-          montant: 125000,
-          statut: "livree"
-        },
-        {
-          id: "CMD-002", 
-          client: "Moussa Traoré",
-          date: "2024-01-14",
-          montant: 89000,
-          statut: "encours"
-        },
-        {
-          id: "CMD-003",
-          client: "Aissata Keita",
-          date: "2024-01-13", 
-          montant: 156000,
-          statut: "livree"
-        },
-        {
-          id: "CMD-004",
-          client: "Boubacar Coulibaly",
-          date: "2024-01-12",
-          montant: 67000,
-          statut: "encours"
-        },
-        {
-          id: "CMD-005",
-          client: "Mariam Koné",
-          date: "2024-01-11",
-          montant: 234000,
-          statut: "livree"
+    // Configuration de l'API
+    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    let dashboardData = {};
+    let currentUser = null;
+
+    // Vérification de l'authentification
+    function checkAuthLocal() {
+      const token = localStorage.getItem('jwtToken');
+      const user = localStorage.getItem('user');
+      
+      if (!token || !user) {
+        window.location.href = 'page1.html';
+        return;
+      }
+      
+      try {
+        const tokenData = JSON.parse(atob(token));
+        if (tokenData.exp < Date.now()) {
+          localStorage.removeItem('jwtToken');
+          localStorage.removeItem('user');
+          window.location.href = 'page1.html';
+          return;
         }
-      ],
-      popularProducts: [
-        {
-          nom: "Riz local",
-          prix: 25000,
-          vendus: 45,
-          stock: 120
-        },
-        {
-          nom: "Huile de palme",
-          prix: 15000,
-          vendus: 38,
-          stock: 85
-        },
-        {
-          nom: "Tomates fraîches",
-          prix: 8000,
-          vendus: 32,
-          stock: 60
-        },
-        {
-          nom: "Oignons",
-          prix: 12000,
-          vendus: 28,
-          stock: 95
-        },
-        {
-          nom: "Poulet local",
-          prix: 35000,
-          vendus: 25,
-          stock: 40
+        
+        currentUser = JSON.parse(user);
+        document.getElementById('user-name').textContent = `${currentUser.prenom} ${currentUser.nom}`;
+      } catch (e) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      }
+    }
+
+    // Fonction pour faire des appels API avec JWT
+    async function apiCall(endpoint, options = {}) {
+      const token = localStorage.getItem('jwtToken');
+      
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-      ]
-    };
+      };
+
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...defaultOptions,
+          ...options,
+          headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+          }
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem('jwtToken');
+          localStorage.removeItem('user');
+          window.location.href = 'page1.html';
+          return null;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('API call failed:', error);
+        return null;
+      }
+    }
+
+    // Charger les données du dashboard
+    async function loadDashboardData() {
+      // Données statiques pour la production
+      dashboardData = {
+        stats: {
+          commandes: 156,
+          chiffreAffaires: 2847500,
+          clients: 89,
+          produits: 45
+        },
+        recentOrders: [
+          {
+            id: "CMD-001",
+            client: { nom: "Diarra", prenom: "Fanta" },
+            dateCommande: "2024-06-20",
+            total: 125000,
+            statut: "livree"
+          },
+          {
+            id: "CMD-002", 
+            client: { nom: "Keita", prenom: "Moussa" },
+            dateCommande: "2024-06-19",
+            total: 89000,
+            statut: "encours"
+          },
+          {
+            id: "CMD-003",
+            client: { nom: "Traoré", prenom: "Aminata" },
+            dateCommande: "2024-06-18",
+            total: 156000,
+            statut: "livree"
+          }
+        ],
+        popularProducts: [
+          { nom: "Riz local", prix: 2500, vendus: 45, stock: 120 },
+          { nom: "Millet", prix: 1800, vendus: 38, stock: 85 },
+          { nom: "Sorgho", prix: 2200, vendus: 32, stock: 95 }
+        ],
+        monthlySales: [210000, 185000, 240000, 260000, 300000, 320000, 350000, 370000, 340000, 310000, 280000, 295000]
+      };
+      
+      updateStats();
+      updateRecentOrders();
+      updatePopularProducts();
+      createSalesChart();
+      createOrdersChart();
+    }
 
     // Fonction pour formater les nombres
     function formatNumber(num) {
@@ -604,10 +671,10 @@
 
     // Mise à jour des statistiques
     function updateStats() {
-      document.getElementById('totalCommandes').textContent = formatNumber(dashboardData.stats.commandes);
-      document.getElementById('totalCA').textContent = formatAmount(dashboardData.stats.chiffreAffaires);
-      document.getElementById('totalClients').textContent = formatNumber(dashboardData.stats.clients);
-      document.getElementById('totalProduits').textContent = formatNumber(dashboardData.stats.produits);
+      document.getElementById('totalCommandes').textContent = formatNumber(dashboardData.stats?.commandes || 0);
+      document.getElementById('totalCA').textContent = formatAmount(dashboardData.stats?.chiffreAffaires || 0);
+      document.getElementById('totalClients').textContent = formatNumber(dashboardData.stats?.clients || 0);
+      document.getElementById('totalProduits').textContent = formatNumber(dashboardData.stats?.produits || 0);
     }
 
     // Mise à jour du tableau des commandes récentes
@@ -615,17 +682,19 @@
       const tbody = document.getElementById('recentOrdersBody');
       tbody.innerHTML = '';
       
-      dashboardData.recentOrders.forEach(order => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${order.id}</td>
-          <td>${order.client}</td>
-          <td>${formatDate(order.date)}</td>
-          <td>${formatAmount(order.montant)}</td>
-          <td><span class="status ${order.statut}">${getStatusText(order.statut)}</span></td>
-        `;
-        tbody.appendChild(row);
-      });
+      if (dashboardData.recentOrders) {
+        dashboardData.recentOrders.forEach(order => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${order.id}</td>
+            <td>${order.client?.nom || 'Client inconnu'}</td>
+            <td>${formatDate(order.dateCommande)}</td>
+            <td>${formatAmount(order.total || 0)}</td>
+            <td><span class="status ${order.statut}">${getStatusText(order.statut)}</span></td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
     }
 
     // Mise à jour du tableau des produits populaires
@@ -633,16 +702,18 @@
       const tbody = document.getElementById('popularProductsBody');
       tbody.innerHTML = '';
       
-      dashboardData.popularProducts.forEach(product => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${product.nom}</td>
-          <td>${formatAmount(product.prix)}</td>
-          <td>${product.vendus}</td>
-          <td>${product.stock}</td>
-        `;
-        tbody.appendChild(row);
-      });
+      if (dashboardData.popularProducts) {
+        dashboardData.popularProducts.forEach(product => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${product.nom}</td>
+            <td>${formatAmount(product.prix)}</td>
+            <td>${product.vendus || 0}</td>
+            <td>${product.stock || 0}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
     }
 
     // Fonction pour basculer la sidebar sur mobile
@@ -654,25 +725,61 @@
     // Fonction de déconnexion
     function logout() {
       if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
         window.location.href = 'page1.html';
       }
     }
 
+    // Fonction de notification
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        animation: slideIn 0.3s ease;
+        ${type === 'success' ? 'background: var(--success);' : 
+          type === 'error' ? 'background: var(--danger);' : 
+          type === 'warning' ? 'background: var(--warning);' : 
+          'background: var(--info);'}
+      `;
+      notification.innerHTML = `
+        <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 4000);
+    }
+
+    // Fonction pour actualiser le dashboard
+    async function refreshDashboard() {
+      await loadDashboardData();
+      showNotification('Dashboard actualisé', 'success');
+    }
+
     // Initialisation du dashboard
-    function initDashboard() {
-      updateStats();
-      updateRecentOrders();
-      updatePopularProducts();
-      createSalesChart();
-      createOrdersChart();
+    async function initDashboard() {
+      checkAuthLocal();
+      await loadDashboardData();
     }
 
     // --- Graphique Ventes mensuelles ---
     function createSalesChart() {
       const ctx = document.getElementById('salesChart').getContext('2d');
-      // Données fictives pour 12 mois
+      // Données fictives pour 12 mois (en attendant l'API)
       const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-      const salesData = [210000, 185000, 240000, 260000, 300000, 320000, 350000, 370000, 340000, 310000, 280000, 295000];
+      const salesData = dashboardData.monthlySales || [210000, 185000, 240000, 260000, 300000, 320000, 350000, 370000, 340000, 310000, 280000, 295000];
+      
       new Chart(ctx, {
         type: 'bar',
         data: {
@@ -705,15 +812,18 @@
     // --- Graphique Répartition des commandes ---
     function createOrdersChart() {
       const ctx = document.getElementById('ordersChart').getContext('2d');
-      // Calculer la répartition à partir des commandes récentes (pour l'exemple)
       const statusLabels = ['Livrée', 'En cours', 'Annulée'];
       const statusColors = ['#16a34a', '#f59e42', '#dc2626'];
       const statusCounts = [0, 0, 0];
-      dashboardData.recentOrders.forEach(order => {
-        if(order.statut === 'livree') statusCounts[0]++;
-        else if(order.statut === 'encours') statusCounts[1]++;
-        else if(order.statut === 'annulee') statusCounts[2]++;
-      });
+      
+      if (dashboardData.recentOrders) {
+        dashboardData.recentOrders.forEach(order => {
+          if(order.statut === 'livree') statusCounts[0]++;
+          else if(order.statut === 'encours') statusCounts[1]++;
+          else if(order.statut === 'annulee') statusCounts[2]++;
+        });
+      }
+      
       new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -738,4 +848,4 @@
     document.addEventListener('DOMContentLoaded', initDashboard);
   </script>
 </body>
-</html> 
+</html>

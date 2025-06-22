@@ -29,7 +29,7 @@ if (!localStorage.getItem('admin')) {
     const adminUser = {
         id: 'admin',
         username: 'admin@ordexa.com',
-        password: 'admin123', // À changer en production !
+        password: 'ordexa55', // À changer en production !
         prenom: 'Admin',
         nom: 'System',
         role: 'admin'
@@ -37,104 +37,82 @@ if (!localStorage.getItem('admin')) {
     localStorage.setItem('admin', JSON.stringify(adminUser));
 }
 
-// Connexion (formulaire .sign-in-form)
-document.querySelector('.sign-in-form')?.addEventListener('submit', function (e) {
+// L'URL de base de l'API déployée
+const API_BASE_URL = "https://ordexa-z.onrender.com";
+
+// --- NOUVELLE GESTION DE LA CONNEXION ---
+document.querySelector('.sign-in-form')?.addEventListener('submit', async function (e) {
     e.preventDefault();
 
-    const emailInput = document.querySelector('.sign-in-form input[placeholder="Username"]');
-    const passwordInput = document.querySelector('.sign-in-form input[placeholder="Password"]');
-
+    const emailInput = document.querySelector('.sign-in-form input[type="text"]');
+    const passwordInput = document.querySelector('.sign-in-form input[type="password"]');
     const email = emailInput.value.trim();
     const password = passwordInput.value.trim();
 
-    if (!email.includes('@') || !email.includes('.')) {
-        alert("Email invalide !");
+    if (!email || !password) {
+        alert("Tous les champs sont requis.");
         return;
     }
 
-    if (password === '') {
-        alert("Mot de passe requis !");
-        return;
-    }
-
-    // Vérification des identifiants admin
-    const adminUser = JSON.parse(localStorage.getItem('admin'));
-    if (email === adminUser.username && password === adminUser.password) {
-        localStorage.setItem('user', JSON.stringify(adminUser));
-        window.location.href = "page2.html";
-        return;
-    }
-
-    // Vérification des identifiants client
-    const clients = JSON.parse(localStorage.getItem('clients') || '[]');
-    const client = clients.find(c => c.email === email);
-    
-    if (client && client.password === password) {
-        const userData = {
-            ...client,
-            role: 'client'
+    // Authentification simple pour la production
+    if (email === 'admin@ordexa.ml' && password === 'admin123') {
+        // Créer un utilisateur admin
+        const user = {
+            id: 1,
+            nom: "Koné",
+            prenom: "Mohamed",
+            email: email,
+            role: "ADMIN"
         };
-        localStorage.setItem('user', JSON.stringify(userData));
-        window.location.href = "client.html";
-        return;
+        
+        // Simuler un token JWT
+        const token = btoa(JSON.stringify({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            exp: Date.now() + 3600000 // 1 heure
+        }));
+        
+        localStorage.setItem('jwtToken', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        alert('Connexion réussie ! Bienvenue ' + user.prenom + ' ' + user.nom);
+        window.location.href = "page2.html";
+    } else {
+        alert('Identifiants incorrects. Veuillez vérifier votre email et mot de passe.');
     }
-
-    alert("Identifiants incorrects !");
 });
 
-// Inscription (formulaire .sign-up-form)
-document.querySelector('.sign-up-form')?.addEventListener('submit', function (e) {
+// --- NOUVELLE GESTION DE L'INSCRIPTION ---
+document.querySelector('.sign-up-form')?.addEventListener('submit', async function (e) {
     e.preventDefault();
 
-    const username = document.querySelector('.sign-up-form input[placeholder="Username"]').value.trim();
-    const email = document.querySelector('.sign-up-form input[placeholder="Email"]').value.trim();
-    const password = document.querySelector('.sign-up-form input[placeholder="Password"]').value.trim();
-    const confirmPassword = document.querySelector('.sign-up-form input[placeholder="Confirmer le mot de passe"]').value.trim();
-
-    if (!email.includes('@') || !email.includes('.')) {
-        alert("Email invalide !");
+    const nomInput = document.querySelector('.sign-up-form input[placeholder="Nom"]');
+    const prenomInput = document.querySelector('.sign-up-form input[placeholder="Prénom"]');
+    const emailInput = document.querySelector('.sign-up-form input[placeholder="Email"]');
+    const passwordInput = document.querySelector('.sign-up-form input[placeholder="Mot de passe"]');
+    
+    const nom = nomInput.value.trim();
+    const prenom = prenomInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+    
+    if (!nom || !prenom || !email || !password) {
+        alert("Tous les champs sont requis.");
         return;
     }
 
-    if (password === '') {
-        alert("Mot de passe requis !");
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        alert("Les mots de passe ne correspondent pas !");
-        return;
-    }
-
-    // Vérifier si l'email n'est pas déjà utilisé
-    const clients = JSON.parse(localStorage.getItem('clients') || '[]');
-    if (clients.some(c => c.email === email)) {
-        alert("Cet email est déjà utilisé !");
-        return;
-    }
-
-    // Créer le nouveau client
-    const newClient = {
-        id: clients.length + 1,
-        username,
-        email,
-        password,
-        prenom: username.split(' ')[0] || '',
-        nom: username.split(' ')[1] || '',
-        tel: '',
-        inscription: new Date().toISOString().split('T')[0],
-        role: 'client'
-    };
-
-    // Ajouter le client à la liste
-    clients.push(newClient);
-    localStorage.setItem('clients', JSON.stringify(clients));
-
-    // Connecter automatiquement
-    localStorage.setItem('user', JSON.stringify(newClient));
-
-    alert("Inscription réussie !");
-    window.location.href = "client.html";
+    // Simuler l'inscription
+    alert('Inscription réussie ! Vous pouvez maintenant vous connecter.');
+    
+    // Retour au formulaire de connexion
+    container?.classList.remove("sign-up-mode");
+    
+    // Vider les champs
+    nomInput.value = '';
+    prenomInput.value = '';
+    emailInput.value = '';
+    passwordInput.value = '';
 });
 
 // Bouton personnalisé : Connexion directe

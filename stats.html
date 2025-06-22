@@ -2,34 +2,50 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Ordexa - Statistiques</title>
+  <title>Ordexa - Tableau de Bord Analytique</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --primary: #4f46e5;
-      --primary-dark: #3730a3;
-      --success: #16a34a;
-      --danger: #dc2626;
-      --warning: #f59e42;
-      --info: #0ea5e9;
-      --sidebar-width: 230px;
-      --bg: #f6f8fa;
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #a5b4fc;
+      --success: #10b981;
+      --success-light: #6ee7b7;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+      --sidebar-width: 250px;
+      --bg: #f8fafc;
       --card-bg: #ffffff;
-      --card-shadow: 0 2px 8px rgba(44,62,80,0.07);
-      --border: #e5e7eb;
-      --text-secondary: #666;
-      --transition: all 0.2s ease;
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --border: #e2e8f0;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+      --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --gradient-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      --gradient-danger: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
     
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
-      color: #222;
+      color: var(--text-primary);
       min-height: 100vh;
+      line-height: 1.6;
     }
     
     /* Sidebar */
@@ -42,71 +58,88 @@
       z-index: 100;
       display: flex;
       flex-direction: column;
+      border-right: 1px solid var(--border);
     }
     
     .sidebar .logo {
       display: flex;
       align-items: center;
-      padding: 1.2rem 1.5rem 1rem 1.5rem;
+      padding: 1.5rem;
       border-bottom: 1px solid var(--border);
+      background: var(--gradient-primary);
+      color: white;
     }
     
     .sidebar .logo img {
-      width: 38px; height: 38px;
-      border-radius: 50%;
-      margin-right: 10px;
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      margin-right: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
     
     .sidebar .logo span {
-      font-weight: bold;
-      font-size: 1.2rem;
-      color: var(--primary);
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.025em;
     }
     
     .sidebar nav {
       flex: 1;
       display: flex;
       flex-direction: column;
-      margin-top: 1.5rem;
+      padding: 1.5rem 0;
     }
     
     .sidebar nav a {
       display: flex;
       align-items: center;
-      padding: 0.9rem 1.5rem;
+      padding: 0.875rem 1.5rem;
       color: var(--text-secondary);
       text-decoration: none;
-      font-size: 1rem;
-      border-left: 4px solid transparent;
+      font-weight: 500;
+      border-left: 3px solid transparent;
       transition: var(--transition);
+      margin: 0.25rem 0;
     }
     
     .sidebar nav a.active, .sidebar nav a:hover {
-      background: var(--bg);
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
       color: var(--primary);
-      border-left: 4px solid var(--primary);
+      border-left: 3px solid var(--primary);
+      transform: translateX(4px);
     }
     
     .sidebar nav a i {
-      margin-right: 1rem;
-      font-size: 1.2em;
+      margin-right: 12px;
+      font-size: 1.1em;
+      width: 20px;
+      text-align: center;
     }
     
     .sidebar .logout {
       margin: 1.5rem;
-      padding: 0.7rem 0;
-      border-top: 1px solid var(--border);
+      padding: 0.875rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
       color: var(--danger);
-      background: none;
-      border: none;
-      font-size: 1rem;
+      background: var(--card-bg);
+      font-weight: 500;
       cursor: pointer;
       display: flex;
       align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    
+    .sidebar .logout:hover {
+      background: var(--danger);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: var(--card-shadow-hover);
     }
     
     .sidebar .logout i {
-      margin-right: 0.7rem;
+      margin-right: 8px;
     }
     
     /* Main */
@@ -121,13 +154,14 @@
     .header {
       background: var(--card-bg);
       box-shadow: var(--card-shadow);
-      padding: 1.2rem 2rem;
+      padding: 1.25rem 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 10;
+      border-bottom: 1px solid var(--border);
     }
     
     .header .menu-btn {
@@ -143,60 +177,90 @@
     .header .user {
       display: flex;
       align-items: center;
+      gap: 12px;
+    }
+    
+    .header .user span {
+      font-weight: 600;
+      color: var(--text-primary);
     }
     
     .header .user img {
-      width: 36px; height: 36px; border-radius: 50%; margin-left: 1rem;
+      width: 40px; height: 40px; 
+      border-radius: 50%; 
+      border: 3px solid var(--primary-light);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
     }
     
     /* Stats Content */
     .stats-content {
-      padding: 2rem 2.5rem;
+      padding: 2rem;
     }
     
     .stats-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      border-radius: 16px;
-      padding: 2rem;
+      background: var(--gradient-primary);
+      border-radius: 20px;
+      padding: 2.5rem;
       color: white;
-      box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+      margin-bottom: 2rem;
+      box-shadow: var(--card-shadow-hover);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stats-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      transform: translate(50%, -50%);
     }
     
     .stats-header h1 {
-      font-size: 2rem;
-      font-weight: bold;
+      font-size: 2.5rem;
+      font-weight: 800;
       display: flex;
       align-items: center;
       gap: 1rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.025em;
+    }
+    
+    .stats-header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin-bottom: 1.5rem;
     }
     
     .stats-header .btn {
       background: rgba(255, 255, 255, 0.2);
       color: white;
       border: 1px solid rgba(255, 255, 255, 0.3);
-      padding: 0.7rem 1.5rem;
-      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
       text-decoration: none;
-      font-weight: 500;
-      transition: all 0.2s;
-      display: flex;
+      font-weight: 600;
+      transition: var(--transition);
+      display: inline-flex;
       align-items: center;
       gap: 0.5rem;
+      backdrop-filter: blur(10px);
     }
     
     .stats-header .btn:hover {
       background: rgba(255, 255, 255, 0.3);
       transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
     
     /* Stats Grid */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
     }
@@ -204,42 +268,89 @@
     .stat-card {
       background: var(--card-bg);
       border-radius: 16px;
-      padding: 1.5rem;
+      padding: 1.75rem;
       box-shadow: var(--card-shadow);
-      transition: all 0.3s ease;
+      transition: var(--transition);
       border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient-primary);
+    }
+    
+    .stat-card:nth-child(2)::before {
+      background: var(--gradient-success);
+    }
+    
+    .stat-card:nth-child(3)::before {
+      background: var(--gradient-warning);
+    }
+    
+    .stat-card:nth-child(4)::before {
+      background: var(--gradient-danger);
     }
     
     .stat-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 25px rgba(44, 62, 80, 0.15);
+      transform: translateY(-8px);
+      box-shadow: var(--card-shadow-hover);
     }
     
     .stat-card h3 {
-      font-size: 1.1rem;
-      color: var(--primary-dark);
+      font-size: 1rem;
+      color: var(--text-secondary);
       margin-bottom: 1rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
+      font-weight: 600;
     }
     
     .stat-card .value {
       font-size: 2.5rem;
-      font-weight: bold;
-      color: var(--primary);
+      font-weight: 800;
+      color: var(--text-primary);
       margin-bottom: 0.5rem;
+      letter-spacing: -0.025em;
     }
     
     .stat-card .label {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .stat-card .trend {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .stat-card .trend.positive {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+    }
+    
+    .stat-card .trend.negative {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
     }
     
     /* Charts Grid */
     .charts-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 2fr 1fr;
       gap: 2rem;
       margin-bottom: 2rem;
     }
@@ -247,68 +358,151 @@
     .chart-block {
       background: var(--card-bg);
       border-radius: 16px;
-      padding: 1.5rem;
+      padding: 1.75rem;
       box-shadow: var(--card-shadow);
       border: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    
+    .chart-block:hover {
+      box-shadow: var(--card-shadow-hover);
     }
     
     .chart-block h3 {
-      font-size: 1.2rem;
-      color: var(--primary-dark);
-      margin-bottom: 1rem;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+    }
+    
+    .chart-container {
+      min-height: 350px;
+      position: relative;
+    }
+    
+    /* Chart Controls */
+    .chart-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .filter-group {
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
     
-    .chart-container {
-      min-height: 300px;
-      position: relative;
+    .filter-group label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    .filter-group select {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      background: var(--card-bg);
+      color: var(--text-primary);
+      transition: var(--transition);
+    }
+    
+    .filter-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    /* Chart Summary */
+    .chart-summary {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+    
+    .summary-item {
+      text-align: center;
+    }
+    
+    .summary-item .label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    
+    .summary-item .value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
     }
     
     /* Table Block */
     .table-block {
       background: var(--card-bg);
       border-radius: 16px;
-      padding: 1.5rem;
+      padding: 1.75rem;
       box-shadow: var(--card-shadow);
       border: 1px solid var(--border);
+      margin-bottom: 2rem;
     }
     
     .table-block h3 {
-      font-size: 1.2rem;
-      color: var(--primary-dark);
-      margin-bottom: 1rem;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
+      font-weight: 700;
     }
     
     .table-actions {
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
     }
     
     .btn {
-      padding: 0.5rem 1rem;
+      padding: 0.625rem 1.25rem;
       border: none;
-      border-radius: 6px;
-      font-size: 0.9rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
+      transition: var(--transition);
+      display: inline-flex;
       align-items: center;
-      gap: 0.3rem;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--card-shadow-hover);
     }
     
     .btn-secondary {
-      background: #f3f4f6;
-      color: #374151;
+      background: var(--bg);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
     }
     
     .btn-secondary:hover {
-      background: #e5e7eb;
+      background: var(--text-secondary);
+      color: white;
     }
     
     .btn-primary {
@@ -334,21 +528,27 @@
     }
     
     th {
-      background: #f8f9fa;
+      background: var(--bg);
       color: var(--text-secondary);
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    tr {
+      transition: var(--transition);
     }
     
     tr:hover {
-      background: #f8f9fa;
+      background: var(--bg);
     }
     
     /* Progress Bar */
     .progress-bar {
       width: 100%;
       height: 8px;
-      background: #e5e7eb;
+      background: var(--border);
       border-radius: 4px;
       overflow: hidden;
       margin-top: 0.5rem;
@@ -356,13 +556,15 @@
     
     .progress-fill {
       height: 100%;
-      background: var(--primary);
+      background: var(--gradient-primary);
       transition: width 0.3s ease;
     }
     
     /* Responsive */
-    @media (max-width: 1100px) {
-      .charts-grid { grid-template-columns: 1fr; }
+    @media (max-width: 1200px) {
+      .charts-grid { 
+        grid-template-columns: 1fr; 
+      }
     }
     
     @media (max-width: 900px) {
@@ -371,12 +573,45 @@
       .sidebar.active { left: 0; }
       .header .menu-btn { display: inline-block; }
       .stats-grid { grid-template-columns: 1fr; }
+      .chart-summary { grid-template-columns: repeat(2, 1fr); }
     }
     
     @media (max-width: 600px) {
       .stats-content { padding: 1rem; }
-      .stats-header { flex-direction: column; gap: 1rem; text-align: center; }
+      .stats-header { 
+        flex-direction: column; 
+        gap: 1rem; 
+        text-align: center; 
+        padding: 1.5rem;
+      }
+      .stats-header h1 { font-size: 2rem; }
+      .chart-summary { grid-template-columns: 1fr; }
+      .table-actions { flex-direction: column; }
     }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .stat-card, .chart-block, .table-block {
+      animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+    .chart-block:nth-child(1) { animation-delay: 0.5s; }
+    .chart-block:nth-child(2) { animation-delay: 0.6s; }
+    .table-block { animation-delay: 0.7s; }
   </style>
 </head>
 <body>
@@ -497,23 +732,97 @@
             <i class="fa-solid fa-chart-area"></i>
             Ventes par jour
           </h3>
-          <div class="chart-container">
-            <canvas id="dailySalesChart"></canvas>
+          <div class="chart-controls" style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <div class="filter-group">
+              <label for="periodFilter" style="font-size: 0.9rem; color: var(--text-secondary); margin-right: 0.5rem;">Période:</label>
+              <select id="periodFilter" onchange="updateDailySalesChart()" style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem;">
+                <option value="7">7 derniers jours</option>
+                <option value="14">14 derniers jours</option>
+                <option value="30">30 derniers jours</option>
+                <option value="90">3 derniers mois</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="metricFilter" style="font-size: 0.9rem; color: var(--text-secondary); margin-right: 0.5rem;">Métrique:</label>
+              <select id="metricFilter" onchange="updateDailySalesChart()" style="padding: 0.4rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem;">
+                <option value="revenue">Chiffre d'affaires</option>
+                <option value="orders">Nombre de commandes</option>
+                <option value="average">Panier moyen</option>
+              </select>
+            </div>
+            <button class="btn btn-secondary" onclick="exportDailySales()" style="font-size: 0.9rem;">
+              <i class="fa-solid fa-download"></i>
+              Exporter
+            </button>
           </div>
+        <div class="chart-container">
+          <canvas id="dailySalesChart"></canvas>
         </div>
+          <div class="chart-summary" style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div class="summary-item">
+              <div style="font-size: 0.9rem; color: var(--text-secondary);">Total période</div>
+              <div id="periodTotal" style="font-weight: bold; color: var(--primary);">0 FCFA</div>
+            </div>
+            <div class="summary-item">
+              <div style="font-size: 0.9rem; color: var(--text-secondary);">Moyenne/jour</div>
+              <div id="dailyAverage" style="font-weight: bold; color: var(--success);">0 FCFA</div>
+            </div>
+            <div class="summary-item">
+              <div style="font-size: 0.9rem; color: var(--text-secondary);">Meilleur jour</div>
+              <div id="bestDay" style="font-weight: bold; color: var(--warning);">-</div>
+            </div>
+            <div class="summary-item">
+              <div style="font-size: 0.9rem; color: var(--text-secondary);">Évolution</div>
+              <div id="evolution" style="font-weight: bold; color: var(--info);">0%</div>
+            </div>
+          </div>
+      </div>
         
         <div class="chart-block">
           <h3>
             <i class="fa-solid fa-chart-pie"></i>
             Top produits vendus
           </h3>
-          <div class="chart-container">
-            <canvas id="topProductsChart"></canvas>
-          </div>
+        <div class="chart-container">
+          <canvas id="topProductsChart"></canvas>
         </div>
       </div>
+    </div>
 
-      <!-- Table -->
+      <!-- Tableau détaillé des ventes par jour -->
+      <div class="table-block">
+        <h3>
+          <i class="fa-solid fa-calendar-day"></i>
+          Détail des ventes par jour
+        </h3>
+        <div class="table-actions">
+          <button id="export-daily-csv" class="btn btn-secondary">
+            <i class="fa-solid fa-download"></i>
+            Exporter CSV
+          </button>
+          <button id="print-daily-btn" class="btn btn-secondary">
+            <i class="fa-solid fa-print"></i>
+            Imprimer
+          </button>
+        </div>
+        <table id="daily-sales-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Nombre de commandes</th>
+              <th>Chiffre d'affaires</th>
+              <th>Panier moyen</th>
+              <th>Évolution</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="daily-sales-tbody">
+            <!-- Les données seront chargées ici -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tableau des ventes par catégorie -->
       <div class="table-block">
         <h3>
           <i class="fa-solid fa-layer-group"></i>
@@ -547,31 +856,118 @@
   </div>
 
   <script>
-    // Données de test pour les statistiques
-    const statsData = {
-      totalOrders: 156,
-      totalRevenue: 2847500,
-      activeClients: 89,
-      soldProducts: 234,
-      dailySales: {
-        labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-        data: [12000, 19000, 15000, 25000, 22000, 30000, 28000]
-      },
-      topProducts: [
-        { nom: 'Riz local', ventes: 45, couleur: '#4f46e5' },
-        { nom: 'Huile de palme', ventes: 38, couleur: '#16a34a' },
-        { nom: 'Tomates fraîches', ventes: 32, couleur: '#f59e42' },
-        { nom: 'Oignons', ventes: 28, couleur: '#dc2626' },
-        { nom: 'Poulet local', ventes: 25, couleur: '#0ea5e9' }
-      ],
-      categorySales: [
-        { categorie: 'Alimentation', ventes: 45, revenu: 1250000, pourcentage: 44 },
-        { categorie: 'Électronique', ventes: 32, revenu: 890000, pourcentage: 31 },
-        { categorie: 'Vêtements', ventes: 28, revenu: 420000, pourcentage: 15 },
-        { categorie: 'Accessoires', ventes: 15, revenu: 180000, pourcentage: 6 },
-        { categorie: 'Autres', ventes: 8, revenu: 107500, pourcentage: 4 }
-      ]
-    };
+    // Configuration de l'API
+    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    let statsData = {};
+    let dailySalesData = {};
+    let currentUser = null;
+    let dailySalesChart = null;
+
+    // Vérification de l'authentification
+    function checkAuth() {
+      const token = localStorage.getItem('jwtToken');
+      const user = localStorage.getItem('user');
+      
+      if (!token || !user) {
+        window.location.href = 'page1.html';
+        return;
+      }
+      
+      try {
+        currentUser = JSON.parse(user);
+      } catch (e) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      }
+    }
+
+    // Fonction pour faire des appels API avec JWT
+    async function apiCall(endpoint, options = {}) {
+      const token = localStorage.getItem('jwtToken');
+      
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
+
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...defaultOptions,
+          ...options,
+          headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+          }
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem('jwtToken');
+          localStorage.removeItem('user');
+          window.location.href = 'page1.html';
+          return null;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('API call failed:', error);
+        return null;
+      }
+    }
+
+    // Charger les statistiques depuis l'API
+    async function loadStats() {
+      const stats = await apiCall('/stats');
+      if (stats) {
+        statsData = stats;
+        updateStats();
+        createTopProductsChart();
+        updateCategoryTable();
+      }
+      
+      // Charger les données de ventes par jour
+      await loadDailySalesData();
+    }
+
+    // Charger les données de ventes par jour
+    async function loadDailySalesData() {
+      const ventesParJour = await apiCall('/stats/ventes-par-jour');
+      if (ventesParJour) {
+        dailySalesData = ventesParJour;
+        updateDailySalesChart();
+        updateDailySalesTable();
+      } else {
+        // Données de test si l'API n'est pas disponible
+        generateTestDailyData();
+      }
+    }
+
+    // Générer des données de test pour les ventes par jour
+    function generateTestDailyData() {
+      const testData = {};
+      const today = new Date();
+      
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // Générer des données réalistes avec variation
+        const baseAmount = 15000 + Math.random() * 20000;
+        const variation = Math.sin(i * 0.3) * 0.3 + Math.random() * 0.4;
+        testData[dateStr] = Math.round(baseAmount * (1 + variation));
+      }
+      
+      dailySalesData = testData;
+      updateDailySalesChart();
+      updateDailySalesTable();
+    }
 
     // Fonction pour formater les nombres
     function formatNumber(num) {
@@ -583,29 +979,85 @@
       return formatNumber(amount) + " FCFA";
     }
 
-    // Mise à jour des statistiques
-    function updateStats() {
-      document.getElementById('totalOrders').textContent = formatNumber(statsData.totalOrders);
-      document.getElementById('totalRevenue').textContent = formatAmount(statsData.totalRevenue);
-      document.getElementById('activeClients').textContent = formatNumber(statsData.activeClients);
-      document.getElementById('soldProducts').textContent = formatNumber(statsData.soldProducts);
+    // Fonction pour formater les dates
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
     }
 
-    // Graphique des ventes quotidiennes
-    function createDailySalesChart() {
+    // Fonction pour formater les dates courtes
+    function formatShortDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short'
+      });
+    }
+
+    // Mise à jour des statistiques
+    function updateStats() {
+      document.getElementById('totalOrders').textContent = formatNumber(statsData.totalOrders || 0);
+      document.getElementById('totalRevenue').textContent = formatAmount(statsData.totalRevenue || 0);
+      document.getElementById('activeClients').textContent = formatNumber(statsData.activeClients || 0);
+      document.getElementById('soldProducts').textContent = formatNumber(statsData.soldProducts || 0);
+    }
+
+    // Mise à jour du graphique des ventes quotidiennes
+    function updateDailySalesChart() {
+      const period = parseInt(document.getElementById('periodFilter').value);
+      const metric = document.getElementById('metricFilter').value;
+      
+      // Filtrer les données selon la période
+      const filteredData = filterDailyDataByPeriod(period);
+      
+      // Préparer les données pour le graphique
+      const labels = [];
+      const data = [];
+      
+      Object.keys(filteredData).sort().forEach(date => {
+        labels.push(formatShortDate(date));
+        
+        if (metric === 'revenue') {
+          data.push(filteredData[date]);
+        } else if (metric === 'orders') {
+          // Simuler le nombre de commandes (1 commande pour 5000 FCFA en moyenne)
+          data.push(Math.round(filteredData[date] / 5000));
+        } else if (metric === 'average') {
+          // Simuler le panier moyen (entre 3000 et 8000 FCFA)
+          data.push(Math.round(3000 + Math.random() * 5000));
+        }
+      });
+      
+      // Calculer les statistiques de résumé
+      updateChartSummary(filteredData, metric);
+      
+      // Mettre à jour ou créer le graphique
+      if (dailySalesChart) {
+        dailySalesChart.destroy();
+      }
+      
       const ctx = document.getElementById('dailySalesChart').getContext('2d');
-      new Chart(ctx, {
+      dailySalesChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: statsData.dailySales.labels,
+          labels: labels,
           datasets: [{
-            label: 'Ventes (FCFA)',
-            data: statsData.dailySales.data,
+            label: getMetricLabel(metric),
+            data: data,
             borderColor: '#4f46e5',
             backgroundColor: 'rgba(79, 70, 229, 0.1)',
             borderWidth: 3,
             fill: true,
-            tension: 0.4
+            tension: 0.4,
+            pointBackgroundColor: '#4f46e5',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7
           }]
         },
         options: {
@@ -614,6 +1066,22 @@
           plugins: {
             legend: {
               display: false
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.y;
+                  if (metric === 'revenue') {
+                    return formatAmount(value);
+                  } else if (metric === 'orders') {
+                    return value + ' commandes';
+                  } else {
+                    return formatAmount(value);
+                  }
+                }
+              }
             }
           },
           scales: {
@@ -621,63 +1089,171 @@
               beginAtZero: true,
               ticks: {
                 callback: function(value) {
+                  if (metric === 'revenue' || metric === 'average') {
                   return formatNumber(value) + ' FCFA';
+                  } else {
+                    return value;
+                  }
                 }
               }
             }
+          },
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
           }
         }
       });
     }
 
-    // Graphique des produits populaires
-    function createTopProductsChart() {
-      const ctx = document.getElementById('topProductsChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: statsData.topProducts.map(p => p.nom),
-          datasets: [{
-            data: statsData.topProducts.map(p => p.ventes),
-            backgroundColor: statsData.topProducts.map(p => p.couleur),
-            borderWidth: 2,
-            borderColor: '#fff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          }
+    // Filtrer les données par période
+    function filterDailyDataByPeriod(days) {
+      const filtered = {};
+      const today = new Date();
+      
+      Object.keys(dailySalesData).forEach(date => {
+        const dataDate = new Date(date);
+        const diffTime = today - dataDate;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= days) {
+          filtered[date] = dailySalesData[date];
         }
       });
+      
+      return filtered;
     }
 
-    // Mise à jour du tableau des catégories
-    function updateCategoryTable() {
-      const tbody = document.getElementById('category-sales-tbody');
+    // Obtenir le label de la métrique
+    function getMetricLabel(metric) {
+      switch (metric) {
+        case 'revenue': return 'Chiffre d\'affaires (FCFA)';
+        case 'orders': return 'Nombre de commandes';
+        case 'average': return 'Panier moyen (FCFA)';
+        default: return 'Ventes';
+      }
+    }
+
+    // Mettre à jour le résumé du graphique
+    function updateChartSummary(data, metric) {
+      const values = Object.values(data);
+      const total = values.reduce((sum, val) => sum + val, 0);
+      const average = values.length > 0 ? total / values.length : 0;
+      
+      // Trouver le meilleur jour
+      const bestDay = Object.keys(data).reduce((best, date) => 
+        data[date] > data[best] ? date : best, Object.keys(data)[0]);
+      
+      // Calculer l'évolution (comparaison avec la période précédente)
+      const evolution = calculateEvolution(data);
+      
+      // Mettre à jour l'affichage
+      if (metric === 'revenue' || metric === 'average') {
+        document.getElementById('periodTotal').textContent = formatAmount(total);
+        document.getElementById('dailyAverage').textContent = formatAmount(average);
+      } else {
+        document.getElementById('periodTotal').textContent = total;
+        document.getElementById('dailyAverage').textContent = Math.round(average);
+      }
+      
+      document.getElementById('bestDay').textContent = bestDay ? formatShortDate(bestDay) : '-';
+      document.getElementById('evolution').textContent = evolution + '%';
+      
+      // Colorer l'évolution
+      const evolutionElement = document.getElementById('evolution');
+      if (evolution > 0) {
+        evolutionElement.style.color = 'var(--success)';
+      } else if (evolution < 0) {
+        evolutionElement.style.color = 'var(--danger)';
+      } else {
+        evolutionElement.style.color = 'var(--text-secondary)';
+      }
+    }
+
+    // Calculer l'évolution
+    function calculateEvolution(data) {
+      const dates = Object.keys(data).sort();
+      if (dates.length < 2) return 0;
+      
+      const midPoint = Math.floor(dates.length / 2);
+      const firstHalf = dates.slice(0, midPoint);
+      const secondHalf = dates.slice(midPoint);
+      
+      const firstHalfTotal = firstHalf.reduce((sum, date) => sum + data[date], 0);
+      const secondHalfTotal = secondHalf.reduce((sum, date) => sum + data[date], 0);
+      
+      if (firstHalfTotal === 0) return 0;
+      
+      return Math.round(((secondHalfTotal - firstHalfTotal) / firstHalfTotal) * 100);
+    }
+
+    // Mettre à jour le tableau des ventes par jour
+    function updateDailySalesTable() {
+      const tbody = document.getElementById('daily-sales-tbody');
       tbody.innerHTML = '';
       
-      statsData.categorySales.forEach(category => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${category.categorie}</td>
-          <td>${category.ventes}</td>
-          <td>${formatAmount(category.revenu)}</td>
+      const sortedDates = Object.keys(dailySalesData).sort().reverse();
+      
+      sortedDates.forEach((date, index) => {
+        const revenue = dailySalesData[date];
+        const orders = Math.round(revenue / 5000); // Simulation
+        const average = Math.round(revenue / orders);
+        
+        // Calculer l'évolution par rapport au jour précédent
+        let evolution = 0;
+        if (index < sortedDates.length - 1) {
+          const previousRevenue = dailySalesData[sortedDates[index + 1]];
+          if (previousRevenue > 0) {
+            evolution = Math.round(((revenue - previousRevenue) / previousRevenue) * 100);
+          }
+        }
+        
+          const row = document.createElement('tr');
+          row.innerHTML = `
+          <td>${formatDate(date)}</td>
+          <td>${orders}</td>
+          <td>${formatAmount(revenue)}</td>
+          <td>${formatAmount(average)}</td>
           <td>
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span>${category.pourcentage}%</span>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${category.pourcentage}%"></div>
-              </div>
-            </div>
+            <span style="color: ${evolution > 0 ? 'var(--success)' : evolution < 0 ? 'var(--danger)' : 'var(--text-secondary)'}; font-weight: bold;">
+              ${evolution > 0 ? '+' : ''}${evolution}%
+            </span>
           </td>
-        `;
-        tbody.appendChild(row);
-      });
+          <td>
+            <button class="btn btn-secondary" onclick="viewDayDetails('${date}')" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+    // Voir les détails d'un jour
+    function viewDayDetails(date) {
+      alert(`Détails pour le ${formatDate(date)}:\nChiffre d'affaires: ${formatAmount(dailySalesData[date])}`);
+    }
+
+    // Exporter les données de ventes quotidiennes
+    function exportDailySales() {
+      const period = parseInt(document.getElementById('periodFilter').value);
+      const metric = document.getElementById('metricFilter').value;
+      const filteredData = filterDailyDataByPeriod(period);
+      
+      const csvContent = "data:text/csv;charset=utf-8," 
+        + "Date," + getMetricLabel(metric) + "\n"
+        + Object.keys(filteredData).sort().map(date => 
+            `${formatDate(date)},${filteredData[date]}`
+          ).join("\n");
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `ventes_quotidiennes_${period}j.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     // Fonction pour basculer la sidebar sur mobile
@@ -689,12 +1265,16 @@
     // Fonction de déconnexion
     function logout() {
       if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
         window.location.href = 'page1.html';
       }
     }
 
     // Fonction d'export CSV
     document.getElementById('export-category-csv').addEventListener('click', function() {
+      if (!statsData.categorySales) return;
+      
       const csvContent = "data:text/csv;charset=utf-8," 
         + "Catégorie,Nombre de ventes,Revenu total,% du total\n"
         + statsData.categorySales.map(c => 
@@ -716,11 +1296,9 @@
     });
 
     // Initialisation des statistiques
-    function initStats() {
-      updateStats();
-      createDailySalesChart();
-      createTopProductsChart();
-      updateCategoryTable();
+    async function initStats() {
+      checkAuth();
+      await loadStats();
     }
 
     // Chargement au démarrage

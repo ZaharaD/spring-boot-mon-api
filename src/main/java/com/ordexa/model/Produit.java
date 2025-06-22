@@ -13,9 +13,10 @@ public class Produit {
     private Long id;
     private String nom;
     private String ref;
-    private String type;
+    private String categorie;
     private String description;
     private int stock;
     private int prix;
     private String statut;
+    private String fournisseur;
 } 

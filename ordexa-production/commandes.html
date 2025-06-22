@@ -671,7 +671,7 @@
             <i class="fa-solid fa-home"></i>
             Tableau de bord
           </a>
-          <button class="btn" onclick="showModal('addOrderModal')">
+          <button class="btn" onclick="showModal('addCommandeModal')">
             <i class="fa-solid fa-plus"></i>
             Nouvelle commande
           </button>
@@ -772,34 +772,26 @@
   </div>
 
   <!-- Modal Ajout/Modification Commande -->
-  <div class="modal" id="addOrderModal">
+  <div class="modal" id="addCommandeModal">
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="modalTitle">Nouvelle Commande</h3>
-        <button class="modal-close" onclick="hideModal('addOrderModal')">&times;</button>
+        <button class="modal-close" onclick="hideModal('addCommandeModal')">&times;</button>
       </div>
-      <form id="orderForm">
+      <form id="commandeForm">
         <div class="form-group">
-          <label for="orderClient">Client *</label>
-          <select id="orderClient" class="form-control" required>
+          <label for="commandeClient">Client *</label>
+          <select id="commandeClient" class="form-control" required>
             <option value="">Sélectionner un client</option>
-            <option value="Fanta Diarra">Fanta Diarra</option>
-            <option value="Moussa Keita">Moussa Keita</option>
-            <option value="Aminata Traoré">Aminata Traoré</option>
-            <option value="Fatoumata Koné">Fatoumata Koné</option>
-            <option value="Ousmane Coulibaly">Ousmane Coulibaly</option>
-            <option value="Mariam Sangaré">Mariam Sangaré</option>
-            <option value="Boubacar Diallo">Boubacar Diallo</option>
-            <option value="Aïcha Ballo">Aïcha Ballo</option>
           </select>
         </div>
         <div class="form-group">
-          <label for="orderDate">Date *</label>
-          <input type="date" id="orderDate" class="form-control" required>
+          <label for="commandeAdresse">Adresse *</label>
+          <input type="text" id="commandeAdresse" class="form-control" required>
         </div>
         <div class="form-group">
-          <label for="orderStatus">Statut *</label>
-          <select id="orderStatus" class="form-control" required>
+          <label for="commandeStatut">Statut *</label>
+          <select id="commandeStatut" class="form-control" required>
             <option value="en attente">En attente</option>
             <option value="en cours">En cours</option>
             <option value="livrée">Livrée</option>
@@ -807,21 +799,28 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="orderProducts">Produits</label>
-          <select id="orderProducts" class="form-control" multiple>
-            <option value="Riz Basmati Premium">Riz Basmati Premium</option>
-            <option value="Huile d'Arachide Pure">Huile d'Arachide Pure</option>
-            <option value="Téléphone Samsung Galaxy">Téléphone Samsung Galaxy</option>
-            <option value="Tissu Wax Africain">Tissu Wax Africain</option>
-            <option value="Ciment Portland">Ciment Portland</option>
-            <option value="Lait en Poudre">Lait en Poudre</option>
-            <option value="Ordinateur Portable HP">Ordinateur Portable HP</option>
-            <option value="Savon de Marseille">Savon de Marseille</option>
+          <label for="produitSelect">Produits</label>
+          <select id="produitSelect" class="form-control" onchange="updatePrixProduit()">
+            <option value="">Sélectionner un produit</option>
           </select>
-          <small style="color: var(--text-secondary);">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs produits</small>
         </div>
-        <div class="modal-footer" id="orderModalFooter">
-          <button type="button" class="btn btn-secondary" onclick="hideModal('addOrderModal')">Annuler</button>
+        <div class="form-group">
+          <label for="prixProduit">Prix unitaire</label>
+          <input type="number" id="prixProduit" class="form-control" min="0" placeholder="Prix du produit" step="0.01">
+        </div>
+        <div class="form-group">
+          <label for="quantite">Quantité</label>
+          <input type="number" id="quantite" class="form-control" min="1" value="1">
+        </div>
+        <button type="button" class="btn btn-primary" onclick="addProduitToCommande()">Ajouter produit</button>
+        <div class="form-group">
+          <label>Produits sélectionnés</label>
+          <ul id="produitsCommandeList">
+            <!-- Produits sélectionnés seront affichés ici -->
+          </ul>
+        </div>
+        <div class="modal-footer" id="commandeModalFooter">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('addCommandeModal')">Annuler</button>
           <button type="submit" class="btn btn-primary">Enregistrer</button>
         </div>
       </form>
@@ -846,534 +845,352 @@
   </div>
 
   <script>
-    // Configuration locale (sans API)
+   // Configuration de l'API
+const API_BASE_URL = 'http://localhost:8080/api';
     let commandesData = [];
+let clientsData = [];
+let produitsData = [];
     let currentUser = null;
+let editingCommandeId = null;
+let produitsCommande = []; // Garde en mémoire les produits ajoutés à une nouvelle commande
 
-    // Données de test pour les commandes
-    const initialCommandesData = [
-      {
-        id: 1,
-        numero: "CMD-2024-001",
-        client: "Fanta Diarra",
-        clientId: 1,
-        date: "2024-06-15",
-        statut: "livrée",
-        total: 125000,
-        produits: [
-          { nom: "Téléphone Samsung Galaxy", quantite: 1, prix: 125000 }
-        ]
-      },
-      {
-        id: 2,
-        numero: "CMD-2024-002",
-        client: "Moussa Keita",
-        clientId: 2,
-        date: "2024-06-16",
-        statut: "en cours",
-        total: 8500,
-        produits: [
-          { nom: "Ciment Portland", quantite: 1, prix: 8500 }
-        ]
-      },
-      {
-        id: 3,
-        numero: "CMD-2024-003",
-        client: "Aminata Traoré",
-        clientId: 3,
-        date: "2024-06-17",
-        statut: "livrée",
-        total: 7000,
-        produits: [
-          { nom: "Riz Basmati Premium", quantite: 2, prix: 5000 },
-          { nom: "Huile d'Arachide Pure", quantite: 1, prix: 1800 }
-        ]
-      },
-      {
-        id: 4,
-        numero: "CMD-2024-004",
-        client: "Fatoumata Koné",
-        clientId: 4,
-        date: "2024-06-18",
-        statut: "en attente",
-        total: 3600,
-        produits: [
-          { nom: "Tissu Wax Africain", quantite: 1, prix: 3500 },
-          { nom: "Savon de Marseille", quantite: 1, prix: 800 }
-        ]
-      },
-      {
-        id: 5,
-        numero: "CMD-2024-005",
-        client: "Ousmane Coulibaly",
-        clientId: 5,
-        date: "2024-06-19",
-        statut: "livrée",
-        total: 2400,
-        produits: [
-          { nom: "Lait en Poudre", quantite: 2, prix: 2400 }
-        ]
-      },
-      {
-        id: 6,
-        numero: "CMD-2024-006",
-        client: "Mariam Sangaré",
-        clientId: 6,
-        date: "2024-06-20",
-        statut: "en cours",
-        total: 450000,
-        produits: [
-          { nom: "Ordinateur Portable HP", quantite: 1, prix: 450000 }
-        ]
-      },
-      {
-        id: 7,
-        numero: "CMD-2024-007",
-        client: "Boubacar Diallo",
-        clientId: 7,
-        date: "2024-06-21",
-        statut: "en attente",
-        total: 4300,
-        produits: [
-          { nom: "Riz Basmati Premium", quantite: 1, prix: 2500 },
-          { nom: "Huile d'Arachide Pure", quantite: 1, prix: 1800 }
-        ]
-      },
-      {
-        id: 8,
-        numero: "CMD-2024-008",
-        client: "Aïcha Ballo",
-        clientId: 8,
-        date: "2024-06-22",
-        statut: "livrée",
-        total: 1600,
-        produits: [
-          { nom: "Savon de Marseille", quantite: 2, prix: 1600 }
-        ]
-      }
-    ];
-
-    // Vérification de l'authentification locale
+// --- AUTHENTIFICATION ---
     function checkAuth() {
       const token = localStorage.getItem('jwtToken');
       const user = localStorage.getItem('user');
-      
       if (!token || !user) {
-        // Créer un utilisateur par défaut si aucun n'existe
-        if (!user) {
-          const defaultUser = {
-            nom: "Mohamed Koné",
-            email: "admin@ordexa.ml",
-            role: "admin"
-          };
-          localStorage.setItem('user', JSON.stringify(defaultUser));
-          localStorage.setItem('jwtToken', 'demo-token-123');
-        }
-      }
-      
-      try {
-        currentUser = JSON.parse(localStorage.getItem('user'));
+    window.location.href = 'page1.html';
+    return;
+  }
+  try {
+    currentUser = JSON.parse(user);
       } catch (e) {
-        const defaultUser = {
-          nom: "Mohamed Koné",
-          email: "admin@ordexa.ml",
-          role: "admin"
-        };
-        localStorage.setItem('user', JSON.stringify(defaultUser));
-        localStorage.setItem('jwtToken', 'demo-token-123');
-        currentUser = defaultUser;
-      }
-    }
+    logout(false); // Déconnexion si les données utilisateur sont corrompues
+  }
+}
 
-    // Fonctions de gestion locale des données
-    function loadCommandes() {
-      console.log('Chargement des commandes depuis localStorage...');
-      const stored = localStorage.getItem('commandesData');
-      
-      if (!stored) {
-        console.log('Aucune donnée trouvée, initialisation avec les données de test...');
-        commandesData = [...initialCommandesData];
-        localStorage.setItem('commandesData', JSON.stringify(commandesData));
+function logout(confirmLogout = true) {
+  const doLogout = () => {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('user');
+    window.location.href = 'page1.html';
+  };
+  if (confirmLogout) {
+    if(confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) doLogout();
       } else {
-        try {
-          commandesData = JSON.parse(stored);
-          console.log('Données commandes chargées:', commandesData.length, 'commandes');
-        } catch (e) {
-          console.error('Erreur lors du chargement des commandes:', e);
-          commandesData = [...initialCommandesData];
-          localStorage.setItem('commandesData', JSON.stringify(commandesData));
-        }
-      }
-      
-      renderCommandes();
-    }
+    doLogout();
+  }
+}
 
-    function saveCommandes() {
-      localStorage.setItem('commandesData', JSON.stringify(commandesData));
-      console.log('Commandes sauvegardées:', commandesData.length, 'commandes');
+// --- APPELS API ---
+async function apiCall(endpoint, options = {}) {
+    const token = localStorage.getItem('jwtToken');
+    const defaultOptions = {
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+    };
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...defaultOptions, ...options, headers: { ...defaultOptions.headers, ...options.headers }
+        });
+        if (response.status === 401) { logout(false); return null; }
+        if (response.status === 204) { return { success: true }; }
+        if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+        return await response.json();
+    } catch (error) {
+        console.error(`API call to ${endpoint} failed:`, error);
+        showNotification(`Erreur de connexion à l'API (${endpoint}). Les données de test sont utilisées.`, 'warning');
+        return null;
     }
+}
 
-    function addCommande(commande) {
-      const newId = Math.max(...commandesData.map(c => c.id), 0) + 1;
-      const newCommande = {
-        ...commande,
-        id: newId,
-        numero: `CMD-2024-${String(newId).padStart(3, '0')}`,
-        date: new Date().toISOString().split('T')[0],
-        statut: "en attente"
-      };
-      
-      commandesData.push(newCommande);
-      saveCommandes();
-      renderCommandes();
-      showNotification('Commande ajoutée avec succès!', 'success');
+// --- CHARGEMENT DES DONNÉES (API AVEC FALLBACK) ---
+async function loadInitialData() {
+    // Charger Clients
+    let clients = await apiCall('/clients');
+    if (!clients || clients.length === 0) {
+        console.log("API clients a échoué ou est vide, chargement des données de test.");
+        clients = [
+            { id: 1, nom: 'Kone', prenom: 'Mohamed' },
+            { id: 2, nom: 'Traore', prenom: 'Awa' },
+            { id: 3, nom: 'Coulibaly', prenom: 'Issa' },
+            { id: 4, nom: 'Diarra', prenom: 'Fatim' },
+            { id: 5, nom: 'Sissoko', prenom: 'Moussa' },
+            { id: 6, nom: 'Keita', prenom: 'Ousmane' },
+            { id: 7, nom: 'Ballo', prenom: 'Aicha' },
+            { id: 8, nom: 'Sangaré', prenom: 'Mariam' },
+            { id: 9, nom: 'Diallo', prenom: 'Boubacar' },
+            { id: 10, nom: 'Doumbia', prenom: 'Sekou' }
+        ];
     }
+    clientsData = clients;
+    populateClientSelect();
 
-    function updateCommande(id, updatedCommande) {
-      const index = commandesData.findIndex(c => c.id === id);
-      if (index !== -1) {
-        commandesData[index] = { ...commandesData[index], ...updatedCommande };
-        saveCommandes();
-        renderCommandes();
-        showNotification('Commande modifiée avec succès!', 'success');
-      }
+    // Charger Produits
+    let produits = await apiCall('/produits');
+    if (!produits || produits.length === 0) {
+        console.log("API produits a échoué ou est vide, chargement des données de test.");
+        produits = [
+            { id: 1, nom: 'Ciment 50kg', prix: 5000 },
+            { id: 2, nom: 'Riz parfumé 25kg', prix: 15000 },
+            { id: 3, nom: 'Savon antiseptique', prix: 800 },
+            { id: 4, nom: 'T-shirt coton', prix: 3500 },
+            { id: 5, nom: 'Ordinateur portable 15"', prix: 350000 },
+            { id: 6, nom: 'Fer à béton 12mm', prix: 4500 },
+            { id: 7, nom: 'Peinture blanche 15L', prix: 25000 },
+            { id: 8, nom: 'Carton de Tomates', prix: 7000 },
+            { id: 9, nom: 'Bidon d\'huile 5L', prix: 9000 },
+            { id: 10, nom: 'Clé USB 32Go', prix: 6000 }
+        ];
     }
+    produitsData = produits;
+    populateProduitSelect();
+    
+    await loadCommandes();
+}
 
-    function deleteCommande(id) {
-      if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
-        commandesData = commandesData.filter(o => o.id !== id);
-        localStorage.setItem('commandesData', JSON.stringify(commandesData));
+async function loadCommandes() {
+    let commandes = await apiCall('/commandes');
+    if (!commandes) {
+        console.log("API commandes a échoué, chargement des données de test.");
+        commandes = [
+            { id: 1, numero: "CMD-MOCK-001", client: { id: 1, prenom: 'Mohamed', nom: 'Kone' }, total: 24000, statut: 'livrée', date: '2024-06-20', lignesCommande: [{ produit: { id:2, nom: 'Riz parfumé 25kg' }, quantite: 1 }, { produit: { id:9, nom: 'Bidon d\'huile 5L' }, quantite: 1 }] },
+            { id: 2, numero: "CMD-MOCK-002", client: { id: 2, prenom: 'Awa', nom: 'Traore' }, total: 9500, statut: 'en cours', date: '2024-06-21', lignesCommande: [{ produit: { id:1, nom: 'Ciment 50kg' }, quantite: 1 }, { produit: { id:6, nom: 'Fer à béton 12mm' }, quantite: 1 }] },
+            { id: 3, numero: "CMD-MOCK-003", client: { id: 3, prenom: 'Issa', nom: 'Coulibaly' }, total: 3500, statut: 'en attente', date: '2024-06-22', lignesCommande: [{ produit: { id:4, nom: 'T-shirt coton' }, quantite: 1 }] },
+            { id: 4, numero: "CMD-MOCK-004", client: { id: 4, prenom: 'Fatim', nom: 'Diarra' }, total: 350000, statut: 'livrée', date: '2024-06-19', lignesCommande: [{ produit: { id:5, nom: 'Ordinateur portable 15"' }, quantite: 1 }] },
+            { id: 5, numero: "CMD-MOCK-005", client: { id: 1, prenom: 'Mohamed', nom: 'Kone' }, total: 7000, statut: 'annulée', date: '2024-06-18', lignesCommande: [{ produit: { id:8, nom: 'Carton de Tomates' }, quantite: 1 }] },
+            { id: 6, numero: "CMD-MOCK-006", client: { id: 5, prenom: 'Moussa', nom: 'Sissoko' }, total: 6000, statut: 'livrée', date: '2024-06-17', lignesCommande: [{ produit: { id:10, nom: 'Clé USB 32Go' }, quantite: 1 }] },
+            { id: 7, numero: "CMD-MOCK-007", client: { id: 8, prenom: 'Mariam', nom: 'Sangaré' }, total: 1600, statut: 'en cours', date: '2024-06-22', lignesCommande: [{ produit: { id:3, nom: 'Savon antiseptique' }, quantite: 2 }] },
+            { id: 8, numero: "CMD-MOCK-008", client: { id: 10, prenom: 'Sekou', nom: 'Doumbia' }, total: 50000, statut: 'en attente', date: '2024-06-22', lignesCommande: [{ produit: { id:7, nom: 'Peinture blanche 15L' }, quantite: 2 }] }
+        ];
+    }
+    commandesData = commandes;
         updateStats();
-        renderCommandes();
-      }
-    }
+    filterOrders();
+}
 
-    function resetToTestData() {
-      commandesData = [...initialCommandesData];
-      saveCommandes();
-      renderCommandes();
-      showNotification('Données de test restaurées!', 'success');
+// --- GESTION DU FORMULAIRE ET DE L'AFFICHAGE ---
+function populateClientSelect() {
+    const clientSelect = document.getElementById('commandeClient');
+    clientSelect.innerHTML = '<option value="">Sélectionner un client</option>';
+    if (clientsData && clientsData.length > 0) {
+        clientsData.forEach(client => {
+            const option = document.createElement('option');
+            option.value = client.id;
+            option.textContent = `${client.prenom} ${client.nom}`;
+            clientSelect.appendChild(option);
+        });
+    } else {
+        clientSelect.innerHTML = '<option value="">Aucun client trouvé. Veuillez en créer un.</option>';
     }
+}
 
-    // Fonction pour formater les nombres
-    function formatNumber(num) {
-      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    }
+function populateProduitSelect() {
+    const produitSelect = document.getElementById('produitSelect');
+    produitSelect.innerHTML = '<option value="">Sélectionner un produit</option>';
+    produitsData.forEach(produit => {
+        const option = document.createElement('option');
+        option.value = produit.id;
+        option.textContent = `${produit.nom} (${formatAmount(produit.prix)})`;
+        produitSelect.appendChild(option);
+    });
+}
 
-    // Fonction pour formater les montants
-    function formatAmount(amount) {
-      return formatNumber(amount) + " FCFA";
-    }
+function filterOrders() {
+  renderCommandes(); // Pour l'instant, on affiche tout. Le filtrage peut être ajouté ici.
+}
 
-    // Fonction pour formater les dates
-    function formatDate(dateStr) {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('fr-FR');
-    }
-
-    // Fonction pour obtenir le statut en français
-    function getStatusText(status) {
-      const statusMap = {
-        'livree': 'Livrée',
-        'livrée': 'Livrée',
-        'encours': 'En cours',
-        'en cours': 'En cours',
-        'annulee': 'Annulée',
-        'annulée': 'Annulée',
-        'en attente': 'En attente'
-      };
-      return statusMap[status] || status;
-    }
-
-    // Mise à jour des statistiques
     function updateStats() {
-      const totalOrders = commandesData.length;
-      const deliveredOrders = commandesData.filter(o => o.statut === 'livrée').length;
-      const pendingOrders = commandesData.filter(o => o.statut === 'en cours').length;
+  document.getElementById('totalOrders').textContent = commandesData.length;
+  document.getElementById('deliveredOrders').textContent = commandesData.filter(o => o.statut === 'livrée').length;
+  document.getElementById('pendingOrders').textContent = commandesData.filter(o => o.statut === 'en cours').length;
       const totalRevenue = commandesData.reduce((sum, order) => sum + (order.total || 0), 0);
-
-      document.getElementById('totalOrders').textContent = formatNumber(totalOrders);
-      document.getElementById('deliveredOrders').textContent = formatNumber(deliveredOrders);
-      document.getElementById('pendingOrders').textContent = formatNumber(pendingOrders);
       document.getElementById('totalRevenue').textContent = formatAmount(totalRevenue);
     }
 
-    // Affichage des commandes
     function renderCommandes() {
       const tbody = document.getElementById('ordersTableBody');
-      if (commandesData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#666;padding:1rem;">Aucune commande trouvée</td></tr>';
+  tbody.innerHTML = '';
+  if (!commandesData || commandesData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucune commande pour le moment.</td></tr>';
         return;
       }
       
-      tbody.innerHTML = commandesData.map(commande => {
-        const statusClass = commande.statut.replace(/\s+/g, '-');
-        return `
-          <tr>
-            <td>${commande.numero}</td>
-            <td>${commande.client}</td>
-            <td>${commande.produits?.map(p => p.nom).join(', ') || 'Aucun produit'}</td>
+  commandesData.forEach(commande => {
+    const clientName = commande.client ? `${commande.client.prenom} ${commande.client.nom}` : 'Client non défini';
+    const produitsText = (commande.lignesCommande || []).map(lc => `${lc.produit?.nom || 'Produit'} (x${lc.quantite})`).join(', ');
+    const statusClass = (commande.statut || '').replace(/\s+/g, '-');
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${commande.numero || `CMD-${commande.id}`}</td>
+      <td>${clientName}</td>
+      <td>${produitsText}</td>
             <td>${formatAmount(commande.total)}</td>
             <td><span class="status ${statusClass}">${getStatusText(commande.statut)}</span></td>
             <td>
               <div class="action-buttons">
-                <button onclick="editCommande(${commande.id})" class="btn-edit" title="Modifier">
-                  <i class="fa-solid fa-edit"></i>
-                </button>
-                <button onclick="deleteCommande(${commande.id})" class="btn-delete" title="Supprimer">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-                <button onclick="showInvoice(${commande.id})" class="btn-invoice" title="Facture">
-                  <i class="fa-solid fa-file-invoice"></i>
-                </button>
+           <button onclick="editCommande(${commande.id})" class="btn-edit" title="Modifier"><i class="fa-solid fa-edit"></i></button>
+           <button onclick="deleteCommande(${commande.id})" class="btn-delete" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
               </div>
             </td>
-          </tr>
-        `;
-      }).join('');
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// --- ACTIONS (CRUD) ---
+document.getElementById('commandeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const clientSelect = document.getElementById('commandeClient');
+    const clientId = clientSelect.value;
+    if (!clientId) {
+        alert('Veuillez sélectionner un client.');
+        return;
     }
 
-    // Filtrage des commandes
-    function filterOrders() {
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const statusFilter = document.getElementById('statusFilter').value;
-
-      let filteredOrders = commandesData.filter(order => {
-        const matchesSearch = order.numero.toLowerCase().includes(searchTerm) ||
-                            order.client.toLowerCase().includes(searchTerm) ||
-                            (order.produits?.map(p => p.nom).join(', ') || '').toLowerCase().includes(searchTerm);
-        const matchesStatus = !statusFilter || order.statut === statusFilter;
-        
-        return matchesSearch && matchesStatus;
-      });
-
-      renderCommandes(filteredOrders);
-    }
-
-    // Fonctions modales
-    function showModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
-      if(modalId === 'addOrderModal') loadFormData();
-    }
-
-    function hideModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
-      document.getElementById('orderForm').reset();
-      const delBtn = document.getElementById('deleteOrderBtn');
-      if (delBtn) delBtn.remove();
-    }
-
-    // Chargement des données du formulaire
-    function loadFormData() {
-      const clientSelect = document.getElementById('orderClient');
-      const productSelect = document.getElementById('orderProducts');
-      
-      // Charger les clients
-      clientSelect.innerHTML = '<option value="">Sélectionner un client</option>';
-      clientsData.forEach(client => {
-        const option = document.createElement('option');
-        option.value = client.id;
-        option.textContent = client.nom;
-        clientSelect.appendChild(option);
-      });
-      
-      // Charger les produits
-      productSelect.innerHTML = '';
-      productsData.forEach(product => {
-        const option = document.createElement('option');
-        option.value = product.id;
-        option.textContent = `${product.nom} - ${formatAmount(product.prix)}`;
-        productSelect.appendChild(option);
-      });
-    }
-
-    // Fonction pour basculer la sidebar sur mobile
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('active');
-    }
-
-    // Fonction de déconnexion
-    function logout() {
-      if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-        localStorage.removeItem('jwtToken');
-        localStorage.removeItem('user');
-        window.location.href = 'page1.html';
-      }
-    }
-
-    // Fonctions CRUD
-    function editCommande(id) {
-      const order = commandesData.find(o => o.id === id);
-      if (order) {
-        document.getElementById('modalTitle').textContent = 'Modifier Commande';
-        document.getElementById('orderClient').value = order.client;
-        document.getElementById('orderDate').value = order.date;
-        document.getElementById('orderStatus').value = order.statut;
-        showModal('addOrderModal');
-        // Ajouter le bouton supprimer si pas déjà présent
-        const footer = document.getElementById('orderModalFooter');
-        if (!document.getElementById('deleteOrderBtn')) {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'btn btn-danger';
-          btn.id = 'deleteOrderBtn';
-          btn.innerHTML = '<i class="fa-solid fa-trash"></i> Supprimer';
-          btn.style.marginRight = 'auto';
-          btn.onclick = function() {
-            if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
-              deleteCommande(id);
-              hideModal('addOrderModal');
-            }
-          };
-          footer.insertBefore(btn, footer.firstChild);
-        }
-      }
-    }
-
-    // Export CSV
-    function exportToCSV() {
-      const csvContent = "data:text/csv;charset=utf-8," 
-        + "Numéro,Client,Date,Produits,Total,Statut\n"
-        + commandesData.map(o => 
-            `${o.numero},${o.client},${o.date},"${o.produits?.map(p => p.nom).join('; ') || 'Aucun produit'}",${o.total || 0},${getStatusText(o.statut)}`
-          ).join("\n");
-      
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `commandes_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    // Gestion du formulaire
-    document.getElementById('orderForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const selectedProducts = Array.from(document.getElementById('orderProducts').selectedOptions).map(opt => opt.value);
-      const produits = selectedProducts.map(nom => ({
-        nom: nom,
-        quantite: 1,
-        prix: 1000 // Prix par défaut
-      }));
-      
-      const total = produits.reduce((sum, p) => sum + p.prix, 0);
-      
-      const orderData = {
-        id: Date.now(), // ID unique
-        numero: `CMD-2024-${String(commandesData.length + 1).padStart(3, '0')}`,
-        client: document.getElementById('orderClient').value,
-        date: document.getElementById('orderDate').value,
-        statut: document.getElementById('orderStatus').value,
-        total: total,
-        produits: produits
-      };
-
-      commandesData.push(orderData);
-      localStorage.setItem('commandesData', JSON.stringify(commandesData));
-      
-      updateStats();
-      renderCommandes();
-      hideModal('addOrderModal');
-      document.getElementById('orderForm').reset();
-      document.getElementById('modalTitle').textContent = 'Nouvelle Commande';
-      
-      // Afficher une notification de succès
-      showNotification('Commande ajoutée avec succès !');
-    });
-
-    // Initialisation
-    function initCommandes() {
-      checkAuth();
-      
-      // Forcer l'affichage des données de test
-      commandesData = [...initialCommandesData];
-      localStorage.setItem('commandesData', JSON.stringify(commandesData));
-      
-      updateStats();
-      renderCommandes();
-      console.log('Commandes forcées:', commandesData.length);
-      
-      // Initialiser la date par défaut
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('orderDate').value = today;
-    }
-
-    // Chargement au démarrage
-    document.addEventListener('DOMContentLoaded', initCommandes);
-
-    // Facture : affichage et impression
-    function showInvoice(id) {
-      const order = commandesData.find(o => o.id === id);
-      if (!order) return;
-      
-      const produitsHtml = order.produits?.map(p => 
-        `<tr><td>${p.nom || 'Produit inconnu'}</td><td>${p.quantite || 1}</td><td>${formatAmount(p.prix)}</td><td>${formatAmount((p.prix || 0) * (p.quantite || 1))}</td></tr>`
-      ).join('') || '<tr><td>Aucun produit</td><td>0</td><td>0</td><td>0</td></tr>';
-      
-      const html = `
-        <div style="text-align:center;margin-bottom:1.5rem;">
-          <h2 style="color:var(--primary-dark);margin-bottom:0.2em;">Facture</h2>
-          <div style="color:#888;font-size:1.1em;">N° ${order.numero} - ${formatDate(order.date)}</div>
-        </div>
-        <div style="margin-bottom:1.2rem;">
-          <strong>Client :</strong> ${order.client || 'Client inconnu'}<br>
-          <strong>Date :</strong> ${formatDate(order.date)}<br>
-          <strong>Statut :</strong> ${getStatusText(order.statut)}
-        </div>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;">
-          <thead>
-            <tr style="background:#f8f9fa;border-bottom:2px solid #dee2e6;">
-              <th style="padding:0.75rem;text-align:left;border-bottom:1px solid #dee2e6;">Produit</th>
-              <th style="padding:0.75rem;text-align:center;border-bottom:1px solid #dee2e6;">Quantité</th>
-              <th style="padding:0.75rem;text-align:right;border-bottom:1px solid #dee2e6;">Prix unitaire</th>
-              <th style="padding:0.75rem;text-align:right;border-bottom:1px solid #dee2e6;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${produitsHtml}
-          </tbody>
-        </table>
-        <div style="text-align:right;font-size:1.2em;font-weight:bold;border-top:2px solid #dee2e6;padding-top:1rem;">
-          Total : ${formatAmount(order.total)}
-        </div>
-      `;
-      
-      const win = window.open('', '_blank');
-      win.document.write(`
-        <html>
-          <head>
-            <title>Facture ${order.numero}</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 2rem; }
-              table { width: 100%; border-collapse: collapse; }
-              th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6; }
-              th { background: #f8f9fa; }
-            </style>
-          </head>
-          <body>${html}</body>
-        </html>
-      `);
-      win.document.close();
-      win.print();
-    }
+    const commandeData = {
+        client: { id: clientId },
+        adresse: document.getElementById('commandeAdresse').value,
+        statut: document.getElementById('commandeStatut').value,
+        lignesCommande: produitsCommande.map(p => ({
+            produit: { id: p.produitId },
+            quantite: p.quantite
+        }))
+    };
     
-    function printInvoice() {
-      const printContents = document.getElementById('invoiceBody').innerHTML;
-      const win = window.open('', '', 'height=700,width=900');
-      win.document.write('<html><head><title>Facture</title>');
-      win.document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">');
-      win.document.write('<style>body{font-family:Segoe UI,Arial,sans-serif;padding:2em;}table{width:100%;border-collapse:collapse;}th,td{padding:0.7em;border-bottom:1px solid #eee;}th{background:#f6f8fa;}</style>');
-      win.document.write('</head><body>');
-      win.document.write(printContents);
-      win.document.write('</body></html>');
-      win.document.close();
-      win.print();
-    }
+    const endpoint = editingCommandeId ? `/commandes/${editingCommandeId}` : '/commandes';
+    const method = editingCommandeId ? 'PUT' : 'POST';
+    
+    const success = await apiCall(endpoint, { method: method, body: JSON.stringify(commandeData) });
 
-    // Fonction pour afficher une notification
+    if (success) {
+        await loadCommandes();
+    } else {
+        // Fallback si l'API échoue
+        console.warn("API a échoué. Mise à jour locale.");
+        const client = clientsData.find(c => c.id == commandeData.client.id);
+        const total = produitsCommande.reduce((sum, p) => sum + (p.prix * p.quantite), 0);
+
+        if (editingCommandeId) {
+            const index = commandesData.findIndex(c => c.id === editingCommandeId);
+            if (index !== -1) {
+                commandesData[index] = { ...commandesData[index], ...commandeData, client: client, total: total, lignesCommande: produitsCommande };
+            }
+        } else {
+            const newCommande = {
+                ...commandeData,
+                id: new Date().getTime(), // ID temporaire
+                numero: `CMD-MOCK-${String(new Date().getTime()).slice(-4)}`,
+                client: client,
+                total: total,
+                date: new Date().toISOString().split('T')[0],
+                lignesCommande: produitsCommande.map(p => ({ produit: { id: p.produitId, nom: p.nom }, quantite: p.quantite }))
+            };
+            commandesData.unshift(newCommande);
+        }
+        updateStats();
+        filterOrders();
+    }
+    hideModal('addCommandeModal');
+});
+
+function updatePrixProduit() {
+  const produitId = document.getElementById('produitSelect').value;
+  const prixInput = document.getElementById('prixProduit');
+  if (!produitId) {
+    prixInput.placeholder = 'Prix du produit';
+    prixInput.value = '';
+    prixInput.disabled = true;
+    return;
+  }
+  const produit = produitsData.find(p => p.id == produitId);
+  if (produit) {
+    prixInput.placeholder = produit.prix + ' FCFA';
+    prixInput.value = produit.prix;
+    prixInput.disabled = false;
+  } else {
+    prixInput.placeholder = 'Prix du produit';
+    prixInput.value = '';
+    prixInput.disabled = true;
+  }
+}
+
+function addProduitToCommande() {
+  const produitId = document.getElementById('produitSelect').value;
+  const quantite = parseInt(document.getElementById('quantite').value);
+  const prix = parseFloat(document.getElementById('prixProduit').value);
+  if (!produitId || !quantite || quantite <= 0 || isNaN(prix) || prix < 0) return;
+  const produit = produitsData.find(p => p.id == produitId);
+  const existingProduit = produitsCommande.find(p => p.produitId == produitId);
+  if (existingProduit) {
+    existingProduit.quantite += quantite;
+    existingProduit.prix = prix;
+  } else {
+    produitsCommande.push({ produitId: produit.id, nom: produit.nom, quantite: quantite, prix: prix });
+  }
+  renderProduitsCommande();
+}
+
+function renderProduitsCommande() {
+  const list = document.getElementById('produitsCommandeList');
+  list.innerHTML = produitsCommande.map(p => `<li>${p.nom} (x${p.quantite})</li>`).join('');
+}
+
+async function deleteCommande(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+        const success = await apiCall(`/commandes/${id}`, { method: 'DELETE' });
+        if(success) {
+            loadCommandes();
+        }
+    }
+}
+
+function editCommande(id) {
+    const commande = commandesData.find(c => c.id === id);
+    if (!commande) return;
+    editingCommandeId = id;
+
+    document.getElementById('modalTitle').textContent = 'Modifier Commande';
+    document.getElementById('commandeClient').value = commande.client.id;
+    document.getElementById('commandeAdresse').value = commande.adresse || '';
+    document.getElementById('commandeStatut').value = commande.statut;
+    
+    produitsCommande = (commande.lignesCommande || []).map(lc => ({
+        produitId: lc.produit.id,
+        nom: lc.produit.nom,
+        quantite: lc.quantite,
+        prix: lc.produit.prix
+    }));
+    renderProduitsCommande();
+    showModal('addCommandeModal');
+}
+
+// --- MODALES & HELPERS ---
+function showModal(modalId) {
+  document.getElementById(modalId).classList.add('active');
+  if(modalId === 'addCommandeModal') {
+    updatePrixProduit();
+  }
+}
+
+function hideModal(modalId) {
+  document.getElementById(modalId).classList.remove('active');
+  document.getElementById('commandeForm').reset();
+  produitsCommande = [];
+  renderProduitsCommande();
+  editingCommandeId = null;
+      document.getElementById('modalTitle').textContent = 'Nouvelle Commande';
+}
+
+function formatAmount(amount) {
+  return (amount || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " FCFA";
+}
+
+function getStatusText(status) {
+  const map = { 'en cours': 'En cours', 'livrée': 'Livrée', 'annulée': 'Annulée', 'en attente': 'En attente' };
+  return map[status] || status;
+}
+
     function showNotification(message, type = 'success') {
       const notification = document.createElement('div');
       notification.className = `notification ${type}`;
@@ -1382,7 +1199,7 @@
         position: fixed;
         top: 20px;
         right: 20px;
-        background: ${type === 'success' ? '#10b981' : '#ef4444'};
+     background: ${type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#f59e0b')};
         color: white;
         padding: 1rem 1.5rem;
         border-radius: 8px;
@@ -1395,19 +1212,17 @@
       
       setTimeout(() => {
         notification.remove();
-      }, 3000);
-    }
+   }, 4000);
+}
 
-    // Fonction pour réinitialiser les données
-    function resetData() {
-      if (confirm('Voulez-vous réinitialiser toutes les données avec les données de test ?')) {
-        localStorage.removeItem('clients');
-        localStorage.removeItem('produits');
-        localStorage.removeItem('commandesData');
-        loadCommandes();
-        showNotification('Données réinitialisées avec succès !');
-      }
+// --- INITIALISATION ---
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+    if (currentUser) {
+        document.getElementById('user-name').textContent = `${currentUser.prenom} ${currentUser.nom}`;
     }
+    loadInitialData();
+});
   </script>
 </body>
 </html> 

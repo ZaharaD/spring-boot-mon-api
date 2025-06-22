@@ -722,212 +722,309 @@
   </div>
 
   <script>
-    // Configuration locale (sans API)
-    let produitsData = [];
+    // Configuration de l'API
+    const API_BASE_URL = 'http://localhost:8080/api';
+    let productsData = [];
     let currentUser = null;
+    let editingProductId = null;
 
-    // Données de test pour les produits
-    const initialProduitsData = [
-      {
-        id: 1,
-        nom: "Riz Basmati Premium",
-        description: "Riz basmati de qualité supérieure, parfait pour les plats traditionnels",
-        prix: 2500,
-        stock: 150,
-        categorie: "Alimentation",
-        fournisseur: "Agro Mali",
-        dateAjout: "2024-01-10",
-        statut: "disponible",
-        image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&h=200&fit=crop"
-      },
-      {
-        id: 2,
-        nom: "Huile d'Arachide Pure",
-        description: "Huile d'arachide 100% naturelle, pressée à froid",
-        prix: 1800,
-        stock: 80,
-        categorie: "Alimentation",
-        fournisseur: "Huilerie Moderne",
-        dateAjout: "2024-01-15",
-        statut: "disponible",
-        image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&h=200&fit=crop"
-      },
-      {
-        id: 3,
-        nom: "Téléphone Samsung Galaxy",
-        description: "Smartphone Samsung Galaxy A54, 128GB, 5G",
-        prix: 125000,
-        stock: 25,
-        categorie: "Électronique",
-        fournisseur: "Tech Mali",
-        dateAjout: "2024-02-01",
-        statut: "disponible",
-        image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&h=200&fit=crop"
-      },
-      {
-        id: 4,
-        nom: "Tissu Wax Africain",
-        description: "Tissu wax coloré, motifs traditionnels africains",
-        prix: 3500,
-        stock: 200,
-        categorie: "Textile",
-        fournisseur: "Textiles du Mali",
-        dateAjout: "2024-02-10",
-        statut: "disponible",
-        image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=200&fit=crop"
-      },
-      {
-        id: 5,
-        nom: "Ciment Portland",
-        description: "Ciment Portland de qualité construction",
-        prix: 8500,
-        stock: 500,
-        categorie: "Construction",
-        fournisseur: "Ciments du Mali",
-        dateAjout: "2024-03-01",
-        statut: "disponible",
-        image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=300&h=200&fit=crop"
-      },
-      {
-        id: 6,
-        nom: "Lait en Poudre",
-        description: "Lait en poudre enrichi en vitamines",
-        prix: 1200,
-        stock: 100,
-        categorie: "Alimentation",
-        fournisseur: "Laitier du Sahel",
-        dateAjout: "2024-03-15",
-        statut: "disponible",
-        image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=300&h=200&fit=crop"
-      },
-      {
-        id: 7,
-        nom: "Ordinateur Portable HP",
-        description: "Laptop HP Pavilion, Intel i5, 8GB RAM, 512GB SSD",
-        prix: 450000,
-        stock: 15,
-        categorie: "Électronique",
-        fournisseur: "Informatique Mali",
-        dateAjout: "2024-04-01",
-        statut: "disponible",
-        image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=300&h=200&fit=crop"
-      },
-      {
-        id: 8,
-        nom: "Savon de Marseille",
-        description: "Savon de Marseille traditionnel, 100% naturel",
-        prix: 800,
-        stock: 300,
-        categorie: "Hygiène",
-        fournisseur: "Savonnerie Moderne",
-        dateAjout: "2024-04-10",
-        statut: "disponible",
-        image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300&h=200&fit=crop"
-      }
-    ];
-
-    // Vérification de l'authentification locale
+    // Vérification de l'authentification
     function checkAuth() {
       const token = localStorage.getItem('jwtToken');
       const user = localStorage.getItem('user');
       
       if (!token || !user) {
-        // Créer un utilisateur par défaut si aucun n'existe
-        if (!user) {
-          const defaultUser = {
-            nom: "Mohamed Koné",
-            email: "admin@ordexa.ml",
-            role: "admin"
-          };
-          localStorage.setItem('user', JSON.stringify(defaultUser));
-          localStorage.setItem('jwtToken', 'demo-token-123');
-        }
+        window.location.href = 'page1.html';
+        return;
       }
       
       try {
-        currentUser = JSON.parse(localStorage.getItem('user'));
+        currentUser = JSON.parse(user);
       } catch (e) {
-        const defaultUser = {
-          nom: "Mohamed Koné",
-          email: "admin@ordexa.ml",
-          role: "admin"
-        };
-        localStorage.setItem('user', JSON.stringify(defaultUser));
-        localStorage.setItem('jwtToken', 'demo-token-123');
-        currentUser = defaultUser;
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
       }
     }
 
-    // Fonctions de gestion locale des données
-    function loadProduits() {
-      console.log('Chargement des produits depuis localStorage...');
-      const stored = localStorage.getItem('produitsData');
+    // Fonction pour faire des appels API avec JWT
+    async function apiCall(endpoint, options = {}) {
+      const token = localStorage.getItem('jwtToken');
       
-      if (!stored) {
-        console.log('Aucune donnée trouvée, initialisation avec les données de test...');
-        produitsData = [...initialProduitsData];
-        localStorage.setItem('produitsData', JSON.stringify(produitsData));
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
+
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...defaultOptions,
+          ...options,
+          headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+          }
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem('jwtToken');
+          localStorage.removeItem('user');
+          window.location.href = 'page1.html';
+          return null;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('API call failed:', error);
+        return null;
+      }
+    }
+
+    // Charger les produits depuis l'API
+    async function loadProducts() {
+      const products = await apiCall('/produits');
+      if (products) {
+        productsData = products;
+      updateStats();
+        filterProducts();
       } else {
-        try {
-          produitsData = JSON.parse(stored);
-          console.log('Données produits chargées:', produitsData.length, 'produits');
-        } catch (e) {
-          console.error('Erreur lors du chargement des produits:', e);
-          produitsData = [...initialProduitsData];
-          localStorage.setItem('produitsData', JSON.stringify(produitsData));
+        // MOCK DATA POUR TEST
+        productsData = [
+          { id: 1, nom: 'Ciment 50kg', categorie: 'Construction', prix: 5000, stock: 120, statut: 'disponible', fournisseur: 'CIMAF', description: 'Sac de ciment 50kg pour construction.' },
+          { id: 2, nom: 'Riz parfumé 25kg', categorie: 'Alimentation', prix: 15000, stock: 30, statut: 'limité', fournisseur: 'Rizerie du Nord', description: 'Riz parfumé 25kg, origine Asie.' },
+          { id: 3, nom: 'Savon antiseptique', categorie: 'Hygiène', prix: 800, stock: 0, statut: 'rupture', fournisseur: 'Savonnerie Africaine', description: 'Savon pour mains et corps.' },
+          { id: 4, nom: 'T-shirt coton', categorie: 'Textile', prix: 3500, stock: 60, statut: 'disponible', fournisseur: 'Textile Plus', description: 'T-shirt 100% coton, plusieurs tailles.' },
+          { id: 5, nom: 'Ordinateur portable 15"', categorie: 'Électronique', prix: 350000, stock: 8, statut: 'limité', fournisseur: 'TechStore', description: 'Laptop 15" SSD 512Go, 8Go RAM.' },
+          { id: 6, nom: 'Fer à béton 12mm', categorie: 'Construction', prix: 4500, stock: 250, statut: 'disponible', fournisseur: 'CIMAF', description: 'Barre de fer pour la construction.' },
+          { id: 7, nom: 'Peinture blanche 15L', categorie: 'Construction', prix: 25000, stock: 25, statut: 'limité', fournisseur: 'Coloria', description: 'Pot de peinture pour intérieur/extérieur.' },
+          { id: 8, nom: 'Carton de Tomates', categorie: 'Alimentation', prix: 7000, stock: 50, statut: 'disponible', fournisseur: 'AgriMali', description: 'Carton de 20kg de tomates fraîches.' },
+          { id: 9, nom: 'Bidon d\'huile 5L', categorie: 'Alimentation', prix: 9000, stock: 0, statut: 'rupture', fournisseur: 'Huilerie du Sud', description: 'Huile végétale pour cuisson.' },
+          { id: 10, nom: 'Clé USB 32Go', categorie: 'Électronique', prix: 6000, stock: 150, statut: 'disponible', fournisseur: 'TechStore', description: 'Clé de stockage USB 3.0.' }
+        ];
+        updateStats();
+        filterProducts();
+      }
+    }
+
+    // Mise à jour des statistiques
+    function updateStats() {
+      const totalProducts = productsData.length;
+      const inStockProducts = productsData.filter(p => p.statut === 'disponible').length;
+      const limitedStockProducts = productsData.filter(p => p.statut === 'limité').length;
+      const outOfStockProducts = productsData.filter(p => p.statut === 'rupture').length;
+
+      document.getElementById('totalProducts').textContent = formatNumber(totalProducts);
+      document.getElementById('inStockProducts').textContent = formatNumber(inStockProducts);
+      document.getElementById('limitedStockProducts').textContent = formatNumber(limitedStockProducts);
+      document.getElementById('outOfStockProducts').textContent = formatNumber(outOfStockProducts);
+    }
+
+    // Affichage et filtrage des produits
+    function filterProducts() {
+      const grid = document.getElementById('productsGrid');
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const categoryFilter = document.getElementById('categoryFilter').value;
+
+      let filteredProducts = productsData.filter(product => {
+        const matchesSearch = product.nom.toLowerCase().includes(searchTerm) ||
+                            (product.description || '').toLowerCase().includes(searchTerm);
+        const matchesCategory = !categoryFilter || product.categorie === categoryFilter;
+        
+        return matchesSearch && matchesCategory;
+      });
+
+      // Vider la grille avant de la remplir
+      grid.innerHTML = '';
+
+      if (filteredProducts.length === 0) {
+        grid.innerHTML = '<div style="text-align:center;color:#666;padding:2rem;grid-column:1/-1;">Aucun produit trouvé. Essayez de changer les filtres ou de créer un nouveau produit.</div>';
+        return;
+      }
+      
+      filteredProducts.forEach(product => {
+        const statusClass = product.statut.replace(/\s+/g, '-');
+        const stockClass = product.stock > 50 ? 'enstock' : product.stock > 10 ? 'limite' : 'rupture';
+        
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+            <div class="product-header">
+              <div class="product-image">
+              <i class="fa-solid ${getTypeIcon(product.categorie)}"></i>
+              </div>
+              <div class="product-info">
+              <h4>${product.nom}</h4>
+              <p>${product.categorie || 'Non catégorisé'}</p>
+              <p><strong>${formatAmount(product.prix)}</strong></p>
+              </div>
+            </div>
+          
+            <div class="product-badges">
+            <span class="badge ${stockClass}">${product.stock} en stock</span>
+            <span class="badge ${statusClass}">${getStatusText(product.statut)}</span>
+            </div>
+          
+          <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+            ${product.description || 'Aucune description disponible'}
+          </p>
+          
+          <div style="margin-bottom: 1rem; font-size: 0.9rem;">
+            <strong>Fournisseur:</strong> ${product.fournisseur || 'Non spécifié'}
+          </div>
+          
+            <div class="product-actions">
+            <button onclick="viewProduct(${product.id})" class="btn btn-secondary">
+                <i class="fa-solid fa-eye"></i>
+                Voir
+              </button>
+            <button onclick="editProduct(${product.id})" class="btn btn-primary">
+                <i class="fa-solid fa-edit"></i>
+                Modifier
+              </button>
+            <button onclick="deleteProduct(${product.id})" class="btn btn-danger">
+                <i class="fa-solid fa-trash"></i>
+                Supprimer
+              </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Fonctions CRUD
+    function editProduct(id) {
+      const product = productsData.find(p => p.id === id);
+      if (product) {
+        document.getElementById('modalTitle').textContent = 'Modifier Produit';
+        editingProductId = product.id;
+        document.getElementById('productNom').value = product.nom;
+        document.getElementById('productCategorie').value = product.categorie || '';
+        document.getElementById('productPrix').value = product.prix;
+        document.getElementById('productStock').value = product.stock;
+        document.getElementById('productFournisseur').value = product.fournisseur || '';
+        document.getElementById('productStatut').value = product.statut;
+        document.getElementById('productDescription').value = product.description || '';
+        showModal('addProductModal');
+      }
+    }
+
+    function viewProduct(id) {
+      const product = productsData.find(p => p.id === id);
+      if (product) {
+        alert(`Détails du produit ${product.nom}\nCatégorie: ${product.categorie || 'N/A'}\nPrix: ${formatAmount(product.prix)}\nStock: ${product.stock}\nStatut: ${product.statut}\nFournisseur: ${product.fournisseur || 'N/A'}\nDescription: ${product.description || 'Aucune description'}`);
+      }
+    }
+
+    async function deleteProduct(id) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+        const success = await apiCall(`/produits/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (success !== null) {
+          await loadProducts();
         }
       }
+    }
+
+    // Gestion du formulaire
+    document.getElementById('productForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
       
-      renderProduits();
-    }
-
-    function saveProduits() {
-      localStorage.setItem('produitsData', JSON.stringify(produitsData));
-      console.log('Produits sauvegardés:', produitsData.length, 'produits');
-    }
-
-    function addProduit(produit) {
-      const newId = Math.max(...produitsData.map(p => p.id), 0) + 1;
-      const newProduit = {
-        ...produit,
-        id: newId,
-        dateAjout: new Date().toISOString().split('T')[0],
-        statut: "disponible",
-        image: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?w=300&h=200&fit=crop`
+      const productData = {
+        nom: document.getElementById('productNom').value,
+        categorie: document.getElementById('productCategorie').value,
+        prix: parseFloat(document.getElementById('productPrix').value),
+        stock: parseInt(document.getElementById('productStock').value),
+        fournisseur: document.getElementById('productFournisseur').value,
+        statut: document.getElementById('productStatut').value,
+        description: document.getElementById('productDescription').value
       };
-      
-      produitsData.push(newProduit);
-      saveProduits();
-      renderProduits();
-      updateStats();
-      showNotification('Produit ajouté avec succès!', 'success');
+
+      let success = null;
+      if (editingProductId) {
+        // Mise à jour
+        success = await apiCall(`/produits/${editingProductId}`, {
+          method: 'PUT',
+          body: JSON.stringify(productData)
+        });
+      } else {
+        // Création
+        success = await apiCall('/produits', {
+        method: 'POST',
+        body: JSON.stringify(productData)
+      });
+      }
+
+      if (success !== null) {
+        await loadProducts();
+        hideModal('addProductModal');
+      } else {
+        // Fallback en cas d'échec de l'API
+        console.warn("API a échoué. Mise à jour locale.");
+        if (editingProductId) {
+          const index = productsData.findIndex(p => p.id === editingProductId);
+          if (index !== -1) {
+            productsData[index] = { ...productsData[index], ...productData };
+          }
+        } else {
+          productData.id = new Date().getTime(); // ID temporaire
+          productsData.unshift(productData);
+        }
+        updateStats();
+        filterProducts();
+        hideModal('addProductModal');
+      }
+    });
+
+    // Fonction pour basculer la sidebar sur mobile
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('active');
     }
 
-    function updateProduit(id, updatedProduit) {
-      const index = produitsData.findIndex(p => p.id === id);
-      if (index !== -1) {
-        produitsData[index] = { ...produitsData[index], ...updatedProduit };
-        saveProduits();
-        renderProduits();
-        updateStats();
-        showNotification('Produit modifié avec succès!', 'success');
+    // Fonction de déconnexion
+    function logout() {
+      if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
       }
     }
 
-    function deleteProduit(id) {
-      produitsData = produitsData.filter(p => p.id !== id);
-      saveProduits();
-      renderProduits();
-      updateStats();
-      showNotification('Produit supprimé avec succès!', 'success');
+    // Fonctions modales
+    function showModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
     }
 
-    function resetToTestData() {
-      produitsData = [...initialProduitsData];
-      saveProduits();
-      renderProduits();
-      updateStats();
-      showNotification('Données de test restaurées!', 'success');
+    function hideModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+      document.getElementById('productForm').reset();
+      document.getElementById('modalTitle').textContent = 'Nouveau Produit';
+      editingProductId = null;
+    }
+
+    // Export CSV
+    function exportToCSV() {
+      const csvContent = "data:text/csv;charset=utf-8," 
+        + "ID,Nom,Catégorie,Prix,Stock,Statut,Fournisseur,Description\n"
+        + productsData.map(p => 
+            `${p.id},"${p.nom}","${p.categorie || ''}",${p.prix},${p.stock},"${p.statut}","${p.fournisseur || ''}","${p.description || ''}"`
+          ).join("\n");
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `produits_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     // Fonction pour formater les nombres
@@ -963,281 +1060,17 @@
       return iconMap[type] || 'fa-box';
     }
 
-    // Mise à jour des statistiques
-    function updateStats() {
-      const totalProducts = produitsData.length;
-      const inStockProducts = produitsData.filter(p => p.statut === 'disponible').length;
-      const limitedStockProducts = produitsData.filter(p => p.statut === 'limité').length;
-      const outOfStockProducts = produitsData.filter(p => p.statut === 'rupture').length;
-
-      document.getElementById('totalProducts').textContent = formatNumber(totalProducts);
-      document.getElementById('inStockProducts').textContent = formatNumber(inStockProducts);
-      document.getElementById('limitedStockProducts').textContent = formatNumber(limitedStockProducts);
-      document.getElementById('outOfStockProducts').textContent = formatNumber(outOfStockProducts);
-    }
-
-    // Affichage des produits
-    function renderProduits() {
-      const grid = document.getElementById('productsGrid');
-      if (produitsData.length === 0) {
-        grid.innerHTML = '<div style="text-align:center;color:#666;padding:2rem;grid-column:1/-1;">Aucun produit trouvé</div>';
-        return;
-      }
-      
-      grid.innerHTML = produitsData.map(produit => {
-        const statusClass = produit.statut.replace(/\s+/g, '-');
-        const stockClass = produit.stock > 50 ? 'enstock' : produit.stock > 10 ? 'limite' : 'rupture';
-        
-        return `
-          <div class="product-card">
-            <div class="product-header">
-              <div class="product-image">
-                <i class="fa-solid ${getTypeIcon(produit.categorie)}"></i>
-              </div>
-              <div class="product-info">
-                <h4>${produit.nom}</h4>
-                <p>${produit.categorie || 'Non catégorisé'}</p>
-                <p><strong>${formatAmount(produit.prix)}</strong></p>
-              </div>
-            </div>
-            
-            <div class="product-badges">
-              <span class="badge ${stockClass}">${produit.stock} en stock</span>
-              <span class="badge ${statusClass}">${getStatusText(produit.statut)}</span>
-            </div>
-            
-            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
-              ${produit.description || 'Aucune description disponible'}
-            </p>
-            
-            <div style="margin-bottom: 1rem; font-size: 0.9rem;">
-              <strong>Fournisseur:</strong> ${produit.fournisseur || 'Non spécifié'}
-            </div>
-            
-            <div class="product-actions">
-              <button onclick="viewProduct(${produit.id})" class="btn btn-secondary">
-                <i class="fa-solid fa-eye"></i>
-                Voir
-              </button>
-              <button onclick="editProduct(${produit.id})" class="btn btn-primary">
-                <i class="fa-solid fa-edit"></i>
-                Modifier
-              </button>
-              <button onclick="deleteProduct(${produit.id})" class="btn btn-danger">
-                <i class="fa-solid fa-trash"></i>
-                Supprimer
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // Filtrage des produits
-    function filterProducts() {
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const categoryFilter = document.getElementById('categoryFilter').value;
-
-      let filteredProducts = produitsData.filter(product => {
-        const matchesSearch = product.nom.toLowerCase().includes(searchTerm) ||
-                            (product.description || '').toLowerCase().includes(searchTerm);
-        const matchesCategory = !categoryFilter || product.categorie === categoryFilter;
-        
-        return matchesSearch && matchesCategory;
-      });
-
-      // Afficher les produits filtrés
-      const grid = document.getElementById('productsGrid');
-      if (filteredProducts.length === 0) {
-        grid.innerHTML = '<div style="text-align:center;color:#666;padding:2rem;grid-column:1/-1;">Aucun produit trouvé</div>';
-        return;
-      }
-      
-      grid.innerHTML = filteredProducts.map(produit => {
-        const statusClass = produit.statut.replace(/\s+/g, '-');
-        const stockClass = produit.stock > 50 ? 'enstock' : produit.stock > 10 ? 'limite' : 'rupture';
-        
-        return `
-          <div class="product-card">
-            <div class="product-header">
-              <div class="product-image">
-                <i class="fa-solid ${getTypeIcon(produit.categorie)}"></i>
-              </div>
-              <div class="product-info">
-                <h4>${produit.nom}</h4>
-                <p>${produit.categorie || 'Non catégorisé'}</p>
-                <p><strong>${formatAmount(produit.prix)}</strong></p>
-              </div>
-            </div>
-            
-            <div class="product-badges">
-              <span class="badge ${stockClass}">${produit.stock} en stock</span>
-              <span class="badge ${statusClass}">${getStatusText(produit.statut)}</span>
-            </div>
-            
-            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
-              ${produit.description || 'Aucune description disponible'}
-            </p>
-            
-            <div style="margin-bottom: 1rem; font-size: 0.9rem;">
-              <strong>Fournisseur:</strong> ${produit.fournisseur || 'Non spécifié'}
-            </div>
-            
-            <div class="product-actions">
-              <button onclick="viewProduct(${produit.id})" class="btn btn-secondary">
-                <i class="fa-solid fa-eye"></i>
-                Voir
-              </button>
-              <button onclick="editProduct(${produit.id})" class="btn btn-primary">
-                <i class="fa-solid fa-edit"></i>
-                Modifier
-              </button>
-              <button onclick="deleteProduct(${produit.id})" class="btn btn-danger">
-                <i class="fa-solid fa-trash"></i>
-                Supprimer
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // Fonctions modales
-    function showModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
-    }
-
-    function hideModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
-      document.getElementById('productForm').reset();
-    }
-
-    // Fonction pour basculer la sidebar sur mobile
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('active');
-    }
-
-    // Fonction de déconnexion
-    function logout() {
-      if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-        localStorage.removeItem('jwtToken');
-        localStorage.removeItem('user');
-        window.location.href = 'page1.html';
-      }
-    }
-
-    // Fonctions CRUD
-    function editProduct(id) {
-      const product = produitsData.find(p => p.id === id);
-      if (product) {
-        document.getElementById('modalTitle').textContent = 'Modifier Produit';
-        document.getElementById('productNom').value = product.nom;
-        document.getElementById('productCategorie').value = product.categorie || '';
-        document.getElementById('productPrix').value = product.prix;
-        document.getElementById('productStock').value = product.stock;
-        document.getElementById('productFournisseur').value = product.fournisseur || '';
-        document.getElementById('productStatut').value = product.statut;
-        document.getElementById('productDescription').value = product.description || '';
-        showModal('addProductModal');
-      }
-    }
-
-    function viewProduct(id) {
-      const product = produitsData.find(p => p.id === id);
-      if (product) {
-        alert(`Détails du produit ${product.nom}\nCatégorie: ${product.categorie || 'N/A'}\nPrix: ${formatAmount(product.prix)}\nStock: ${product.stock}\nStatut: ${getStatusText(product.statut)}\nFournisseur: ${product.fournisseur || 'N/A'}\nDescription: ${product.description || 'Aucune description'}`);
-      }
-    }
-
-    // Export CSV
-    function exportToCSV() {
-      const csvContent = "data:text/csv;charset=utf-8," 
-        + "ID,Nom,Catégorie,Prix,Stock,Statut,Fournisseur,Description\n"
-        + produitsData.map(p => 
-            `${p.id},"${p.nom}","${p.categorie || ''}",${p.prix},${p.stock},"${p.statut}","${p.fournisseur || ''}","${p.description || ''}"`
-          ).join("\n");
-      
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `produits_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    // Gestion du formulaire
-    document.getElementById('productForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const productData = {
-        id: Date.now(), // ID unique
-        nom: document.getElementById('productNom').value,
-        categorie: document.getElementById('productCategorie').value,
-        prix: parseFloat(document.getElementById('productPrix').value),
-        stock: parseInt(document.getElementById('productStock').value),
-        fournisseur: document.getElementById('productFournisseur').value,
-        statut: document.getElementById('productStatut').value,
-        description: document.getElementById('productDescription').value,
-        dateAjout: new Date().toISOString().split('T')[0],
-        image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=200&fit=crop"
-      };
-
-      addProduit(productData);
-    });
-
-    // Fonction pour afficher une notification
-    function showNotification(message, type = 'success') {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.textContent = message;
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#10b981' : '#ef4444'};
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-      `;
-      
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.remove();
-      }, 3000);
-    }
-
-    // Fonction pour réinitialiser les données
-    function resetData() {
-      if (confirm('Voulez-vous réinitialiser toutes les données avec les données de test ?')) {
-        localStorage.removeItem('clients');
-        localStorage.removeItem('produits');
-        localStorage.removeItem('commandes');
-        resetToTestData();
-        showNotification('Données réinitialisées avec succès !');
-      }
-    }
-
     // Initialisation
-    function initProduits() {
+    function initProducts() {
       checkAuth();
-      
-      // Forcer l'affichage des données de test
-      produitsData = [...initialProduitsData];
-      localStorage.setItem('produitsData', JSON.stringify(produitsData));
-      
-      updateStats();
-      renderProduits();
-      console.log('Produits forcés:', produitsData.length);
+      if (currentUser) {
+        document.getElementById('user-name').textContent = `${currentUser.prenom} ${currentUser.nom}`;
+      }
+      loadProducts();
     }
 
     // Chargement au démarrage
-    document.addEventListener('DOMContentLoaded', initProduits);
+    document.addEventListener('DOMContentLoaded', initProducts);
   </script>
 </body>
 </html> 

@@ -368,26 +368,79 @@
     </div>
   </div>
   <script>
-    // Simulation utilisateurs si vide
-    if (!localStorage.getItem('users')) {
-      localStorage.setItem('users', JSON.stringify([
-        {id:1, nom:'Koné', prenom:'Mohamed', email:'admin@ordexa.com', role:'admin', avatar:'', password:'admin123'},
-        {id:2, nom:'Traoré', prenom:'Aïssata', email:'aissata.traore@ordexa.com', role:'manager', avatar:'', password:'password123'},
-        {id:3, nom:'Coulibaly', prenom:'Moussa', email:'moussa.coulibaly@ordexa.com', role:'employee', avatar:'', password:'password123'},
-        {id:4, nom:'Keïta', prenom:'Mariam', email:'mariam.keita@ordexa.com', role:'employee', avatar:'', password:'password123'},
-        {id:5, nom:'Diarra', prenom:'Ibrahim', email:'ibrahim.diarra@ordexa.com', role:'employee', avatar:'', password:'password123'},
-        {id:6, nom:'Konaté', prenom:'Fatoumata', email:'fatoumata.konate@ordexa.com', role:'manager', avatar:'', password:'password123'},
-        {id:7, nom:'Diallo', prenom:'Abdoulaye', email:'abdoulaye.diallo@ordexa.com', role:'employee', avatar:'', password:'password123'},
-        {id:8, nom:'Sidibé', prenom:'Ousmane', email:'ousmane.sidibe@ordexa.com', role:'employee', avatar:'', password:'password123'},
-        {id:9, nom:'Sangaré', prenom:'Kadidia', email:'kadidia.sangare@ordexa.com', role:'employee', avatar:'', password:'password123'},
-        {id:10, nom:'Dembélé', prenom:'Boubacar', email:'boubacar.dembele@ordexa.com', role:'manager', avatar:'', password:'password123'},
-        {id:11, nom:'Camara', prenom:'Adama', email:'adama.camara@ordexa.com', role:'employee', avatar:'', password:'password123'},
-        {id:12, nom:'Touré', prenom:'Hawa', email:'hawa.toure@ordexa.com', role:'employee', avatar:'', password:'password123'},
-        {id:13, nom:'Sissoko', prenom:'Mahamadou', email:'mahamadou.sissoko@ordexa.com', role:'employee', avatar:'', password:'password123'},
-        {id:14, nom:'Samaké', prenom:'Awa', email:'awa.samake@ordexa.com', role:'employee', avatar:'', password:'password123'},
-        {id:15, nom:'Doumbia', prenom:'Lassana', email:'lassana.doumbia@ordexa.com', role:'employee', avatar:'', password:'password123'}
-      ]));
+    // Configuration de l'API
+    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    let currentUser = null;
+    let users = [];
+
+    // Vérification de l'authentification
+    function checkAuth() {
+      const token = localStorage.getItem('jwtToken');
+      const user = localStorage.getItem('user');
+      
+      if (!token || !user) {
+        window.location.href = 'page1.html';
+        return;
+      }
+      
+      try {
+        currentUser = JSON.parse(user);
+        document.getElementById('user-name').textContent = `${currentUser.prenom} ${currentUser.nom}`;
+      } catch (e) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      }
     }
+
+    // Fonction pour faire des appels API avec JWT
+    async function apiCall(endpoint, options = {}) {
+      const token = localStorage.getItem('jwtToken');
+      
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
+
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...defaultOptions,
+          ...options,
+          headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+          }
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem('jwtToken');
+          localStorage.removeItem('user');
+          window.location.href = 'page1.html';
+          return null;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('API call failed:', error);
+        return null;
+      }
+    }
+
+    // Charger les utilisateurs depuis l'API
+    async function loadUsers() {
+      const usersData = await apiCall('/users');
+      if (usersData) {
+        users = usersData;
+        renderUsers();
+      }
+    }
+
     // Fonction de notification
     function showNotification(message, type = 'info') {
       const notification = document.createElement('div');
@@ -399,19 +452,21 @@
       document.body.appendChild(notification);
       setTimeout(() => notification.remove(), 4000);
     }
+
     // Gestion des utilisateurs
-    let users = JSON.parse(localStorage.getItem('users')) || [];
-    function loadUsers() {
+    function renderUsers() {
       const userList = document.getElementById('user-list');
       if (users.length === 0) {
         userList.innerHTML = '<p style="text-align:center;color:#666;padding:1rem;">Aucun utilisateur trouvé</p>';
         return;
       }
+      
       // Trier les utilisateurs par rôle (admin en premier, puis manager, puis employee)
       const sortedUsers = users.sort((a, b) => {
-        const roleOrder = { admin: 1, manager: 2, employee: 3 };
+        const roleOrder = { ADMIN: 1, MANAGER: 2, EMPLOYEE: 3 };
         return roleOrder[a.role] - roleOrder[b.role];
       });
+      
       userList.innerHTML = sortedUsers.map(user => `
         <div class="user-item">
           <div class="user-info">
@@ -420,7 +475,7 @@
               <div style="font-weight:600;">${user.prenom} ${user.nom}</div>
               <div style="font-size:0.95em;color:#888;">${user.email}</div>
             </div>
-            <span class="user-role role-${user.role}">${user.role === 'admin' ? 'Administrateur' : user.role === 'manager' ? 'Manager' : 'Employé'}</span>
+            <span class="user-role role-${user.role.toLowerCase()}">${user.role === 'ADMIN' ? 'Administrateur' : user.role === 'MANAGER' ? 'Manager' : 'Employé'}</span>
           </div>
           <div class="user-actions">
             <button title="Modifier" onclick="editUser(${user.id})"><i class="fa-solid fa-edit"></i></button>
@@ -430,61 +485,150 @@
         </div>
       `).join('');
     }
-    // Fonctions utilisateurs (CRUD simplifié)
-    function editUser(id) { showNotification('Modification utilisateur non implémentée', 'info'); }
-    function changeUserPassword(id) { showNotification('Changement de mot de passe utilisateur non implémenté', 'info'); }
-    function deleteUser(id) {
+
+    // Fonctions utilisateurs (CRUD)
+    function editUser(id) { 
+      showNotification('Modification utilisateur non implémentée', 'info'); 
+    }
+    
+    function changeUserPassword(id) { 
+      showNotification('Changement de mot de passe utilisateur non implémenté', 'info'); 
+    }
+    
+    async function deleteUser(id) {
       if (confirm('Supprimer cet utilisateur ?')) {
-        users = users.filter(u => u.id !== id);
-        localStorage.setItem('users', JSON.stringify(users));
-        loadUsers();
-        showNotification('Utilisateur supprimé', 'success');
+        const success = await apiCall(`/users/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (success !== null) {
+          await loadUsers();
+          showNotification('Utilisateur supprimé', 'success');
+        }
       }
     }
+
     document.getElementById('add-user-btn').onclick = function() {
       showNotification('Ajout utilisateur non implémenté', 'info');
     };
+
     // Mot de passe
-    document.getElementById('change-password-form').onsubmit = function(e) {
+    document.getElementById('change-password-form').onsubmit = async function(e) {
       e.preventDefault();
+      const currentPwd = document.getElementById('current-password').value;
       const newPwd = document.getElementById('new-password').value;
       const confirmPwd = document.getElementById('confirm-new-password').value;
+      
       if (newPwd !== confirmPwd) {
         document.getElementById('password-change-error').classList.add('active');
         return;
       }
+      
       document.getElementById('password-change-error').classList.remove('active');
-      showNotification('Mot de passe mis à jour', 'success');
-      this.reset();
-    };
-    // Boutique
-    document.getElementById('store-info-form').onsubmit = function(e) {
-      e.preventDefault();
-      showNotification('Informations boutique enregistrées', 'success');
-    };
-    // Sauvegarde, restauration, reset
-    document.getElementById('backup-btn').onclick = function() { showNotification('Sauvegarde effectuée', 'success'); };
-    document.getElementById('restore-btn').onclick = function() { showNotification('Restauration effectuée', 'success'); };
-    document.getElementById('reset-btn').onclick = function() {
-      if (confirm('Réinitialiser toutes les données ?')) {
-        localStorage.clear();
-        showNotification('Données réinitialisées', 'success');
-        setTimeout(() => location.reload(), 1000);
+      
+      const success = await apiCall('/users/change-password', {
+        method: 'POST',
+        body: JSON.stringify({
+          currentPassword: currentPwd,
+          newPassword: newPwd
+        })
+      });
+
+      if (success !== null) {
+        showNotification('Mot de passe mis à jour', 'success');
+        this.reset();
+      } else {
+        showNotification('Erreur lors de la mise à jour du mot de passe', 'error');
       }
     };
+
+    // Boutique
+    document.getElementById('store-info-form').onsubmit = async function(e) {
+      e.preventDefault();
+      
+      const storeData = {
+        nom: document.getElementById('store-name').value,
+        email: document.getElementById('store-email').value,
+        adresse: document.getElementById('store-address').value,
+        telephone: document.getElementById('store-phone').value,
+        devise: document.getElementById('store-currency').value
+      };
+
+      const success = await apiCall('/settings/store', {
+        method: 'POST',
+        body: JSON.stringify(storeData)
+      });
+
+      if (success !== null) {
+        showNotification('Informations boutique enregistrées', 'success');
+      } else {
+        showNotification('Erreur lors de l\'enregistrement', 'error');
+      }
+    };
+
+    // Sauvegarde, restauration, reset
+    document.getElementById('backup-btn').onclick = async function() { 
+      const success = await apiCall('/settings/backup', {
+        method: 'POST'
+      });
+      
+      if (success !== null) {
+        showNotification('Sauvegarde effectuée', 'success');
+      } else {
+        showNotification('Erreur lors de la sauvegarde', 'error');
+      }
+    };
+    
+    document.getElementById('restore-btn').onclick = async function() { 
+      const success = await apiCall('/settings/restore', {
+        method: 'POST'
+      });
+      
+      if (success !== null) {
+        showNotification('Restauration effectuée', 'success');
+      } else {
+        showNotification('Erreur lors de la restauration', 'error');
+      }
+    };
+    
+    document.getElementById('reset-btn').onclick = async function() {
+      if (confirm('Réinitialiser toutes les données ?')) {
+        const success = await apiCall('/settings/reset', {
+          method: 'POST'
+        });
+        
+        if (success !== null) {
+          showNotification('Données réinitialisées', 'success');
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          showNotification('Erreur lors de la réinitialisation', 'error');
+        }
+      }
+    };
+
     // Sidebar mobile
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('active');
     }
+
     // Déconnexion
     function logout() {
       if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
         window.location.href = 'page1.html';
       }
     }
-    // Init
-    document.addEventListener('DOMContentLoaded', loadUsers);
+
+    // Initialisation
+    async function initSettings() {
+      checkAuth();
+      await loadUsers();
+    }
+
+    // Chargement au démarrage
+    document.addEventListener('DOMContentLoaded', initSettings);
   </script>
 </body>
 </html> 

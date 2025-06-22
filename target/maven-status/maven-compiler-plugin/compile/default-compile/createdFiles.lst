@@ -21,6 +21,7 @@ com\ordexa\service\UserService.class
 com\ordexa\security\CustomUserDetailsService.class
 com\ordexa\exception\GlobalExceptionHandler.class
 com\ordexa\model\Client.class
+com\ordexa\config\DemoDataConfig.class
 com\ordexa\OrdexaBackendApplication.class
 com\ordexa\security\JwtAuthenticationFilter.class
 com\ordexa\controller\ClientController.class

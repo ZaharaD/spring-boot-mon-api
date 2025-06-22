@@ -713,81 +713,78 @@
   </div>
 
   <script>
-    // Données de test pour les produits
-    const productsData = [
-      {
-        id: 1,
-        nom: "Riz local premium",
-        ref: "PRD-001",
-        type: "Alimentaire",
-        prix: 25000,
-        statut: "En stock",
-        description: "Riz de qualité supérieure cultivé localement"
-      },
-      {
-        id: 2,
-        nom: "Huile de palme naturelle",
-        ref: "PRD-002",
-        type: "Alimentaire",
-        prix: 15000,
-        statut: "Limité",
-        description: "Huile de palme 100% naturelle et bio"
-      },
-      {
-        id: 3,
-        nom: "Tomates fraîches",
-        ref: "PRD-003",
-        type: "Alimentaire",
-        prix: 8000,
-        statut: "En stock",
-        description: "Tomates fraîches du jardin"
-      },
-      {
-        id: 4,
-        nom: "Oignons locaux",
-        ref: "PRD-004",
-        type: "Alimentaire",
-        prix: 12000,
-        statut: "Rupture",
-        description: "Oignons frais cultivés localement"
-      },
-      {
-        id: 5,
-        nom: "Poulet local",
-        ref: "PRD-005",
-        type: "Alimentaire",
-        prix: 35000,
-        statut: "En stock",
-        description: "Poulet fermier élevé en plein air"
-      },
-      {
-        id: 6,
-        nom: "Tissu traditionnel",
-        ref: "PRD-006",
-        type: "Vêtement",
-        prix: 45000,
-        statut: "Limité",
-        description: "Tissu traditionnel malien de qualité"
-      },
-      {
-        id: 7,
-        nom: "Bracelet artisanal",
-        ref: "PRD-007",
-        type: "Accessoire",
-        prix: 15000,
-        statut: "En stock",
-        description: "Bracelet fait main par des artisans locaux"
-      },
-      {
-        id: 8,
-        nom: "Savon traditionnel",
-        ref: "PRD-008",
-        type: "Accessoire",
-        prix: 5000,
-        statut: "En stock",
-        description: "Savon traditionnel aux herbes naturelles"
+    // Configuration de l'API
+    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    let productsData = [];
+    let currentUser = null;
+
+    // Vérification de l'authentification
+    function checkAuth() {
+      const token = localStorage.getItem('jwtToken');
+      const user = localStorage.getItem('user');
+      
+      if (!token || !user) {
+        window.location.href = 'page1.html';
+        return;
       }
-    ];
+      
+      try {
+        currentUser = JSON.parse(user);
+      } catch (e) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      }
+    }
+
+    // Fonction pour faire des appels API avec JWT
+    async function apiCall(endpoint, options = {}) {
+      const token = localStorage.getItem('jwtToken');
+      
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
+
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...defaultOptions,
+          ...options,
+          headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+          }
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem('jwtToken');
+          localStorage.removeItem('user');
+          window.location.href = 'page1.html';
+          return null;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('API call failed:', error);
+        return null;
+      }
+    }
+
+    // Charger les produits depuis l'API
+    async function loadProducts() {
+      const products = await apiCall('/produits');
+      if (products) {
+        productsData = products;
+        updateStats();
+        renderProducts();
+      }
+    }
 
     // Fonction pour formater les nombres
     function formatNumber(num) {
@@ -913,6 +910,8 @@
     // Fonction de déconnexion
     function logout() {
       if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
         window.location.href = 'page1.html';
       }
     }
@@ -939,13 +938,14 @@
       }
     }
 
-    function deleteProduct(id) {
+    async function deleteProduct(id) {
       if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
-        const index = productsData.findIndex(p => p.id === id);
-        if (index > -1) {
-          productsData.splice(index, 1);
-          renderProducts();
-          updateStats();
+        const success = await apiCall(`/produits/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (success !== null) {
+          await loadProducts();
         }
       }
     }
@@ -968,11 +968,10 @@
     }
 
     // Gestion du formulaire
-    document.getElementById('productForm').addEventListener('submit', function(e) {
+    document.getElementById('productForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const newProduct = {
-        id: productsData.length + 1,
+      const productData = {
         nom: document.getElementById('productName').value,
         ref: document.getElementById('productRef').value,
         type: document.getElementById('productType').value,
@@ -981,17 +980,22 @@
         description: document.getElementById('productDescription').value
       };
 
-      productsData.push(newProduct);
-      renderProducts();
-      updateStats();
-      hideModal('addProductModal');
-      document.getElementById('modalTitle').textContent = 'Nouveau Produit';
+      const success = await apiCall('/produits', {
+        method: 'POST',
+        body: JSON.stringify(productData)
+      });
+
+      if (success !== null) {
+        await loadProducts();
+        hideModal('addProductModal');
+        document.getElementById('modalTitle').textContent = 'Nouveau Produit';
+      }
     });
 
     // Initialisation
-    function initProducts() {
-      updateStats();
-      renderProducts();
+    async function initProducts() {
+      checkAuth();
+      await loadProducts();
     }
 
     // Chargement au démarrage

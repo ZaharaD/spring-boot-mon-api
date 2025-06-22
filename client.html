@@ -687,79 +687,82 @@
   </div>
 
   <script>
-    // Données de test pour les clients
-    const clientsData = [
-      {
-        id: 1,
-        nom: "Fatoumata Diallo",
-        email: "fatoumata.diallo@email.com",
-        telephone: "+223 76 12 34 56",
-        adresse: "123 Rue de la Paix, Bamako",
-        statut: "vip",
-        dateInscription: "2024-01-15",
-        commandes: 12,
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 2,
-        nom: "Moussa Traoré",
-        email: "moussa.traore@email.com",
-        telephone: "+223 76 23 45 67",
-        adresse: "456 Avenue Modibo Keita, Bamako",
-        statut: "nouveau",
-        dateInscription: "2024-01-20",
-        commandes: 3,
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 3,
-        nom: "Aissata Keita",
-        email: "aissata.keita@email.com",
-        telephone: "+223 76 34 56 78",
-        adresse: "789 Boulevard de l'Indépendance, Bamako",
-        statut: "premium",
-        dateInscription: "2024-01-10",
-        commandes: 25,
-        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 4,
-        nom: "Boubacar Coulibaly",
-        email: "boubacar.coulibaly@email.com",
-        telephone: "+223 76 45 67 89",
-        adresse: "321 Rue du Commerce, Bamako",
-        statut: "normal",
-        dateInscription: "2024-01-25",
-        commandes: 7,
-        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 5,
-        nom: "Mariam Koné",
-        email: "mariam.kone@email.com",
-        telephone: "+223 76 56 78 90",
-        adresse: "654 Avenue de la Liberté, Bamako",
-        statut: "vip",
-        dateInscription: "2024-01-05",
-        commandes: 18,
-        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 6,
-        nom: "Sékou Diarra",
-        email: "sekou.diarra@email.com",
-        telephone: "+223 76 67 89 01",
-        adresse: "987 Rue des Artisans, Bamako",
-        statut: "nouveau",
-        dateInscription: "2024-01-30",
-        commandes: 1,
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face"
+    // Configuration de l'API
+    const API_BASE_URL = 'https://ordexa-backend.onrender.com/api';
+    let clientsData = [];
+    let currentUser = null;
+
+    // Vérification de l'authentification
+    function checkAuth() {
+      const token = localStorage.getItem('jwtToken');
+      const user = localStorage.getItem('user');
+      
+      if (!token || !user) {
+        window.location.href = 'page1.html';
+        return;
       }
-    ];
+      
+      try {
+        currentUser = JSON.parse(user);
+      } catch (e) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      }
+    }
+
+    // Fonction pour faire des appels API avec JWT
+    async function apiCall(endpoint, options = {}) {
+      const token = localStorage.getItem('jwtToken');
+      
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      };
+
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...defaultOptions,
+          ...options,
+          headers: {
+            ...defaultOptions.headers,
+            ...options.headers
+          }
+        });
+
+        if (response.status === 401) {
+          localStorage.removeItem('jwtToken');
+          localStorage.removeItem('user');
+          window.location.href = 'page1.html';
+          return null;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('API call failed:', error);
+        return null;
+      }
+    }
+
+    // Charger les clients depuis l'API
+    async function loadClients() {
+      const clients = await apiCall('/clients');
+      if (clients) {
+        clientsData = clients;
+        updateStats();
+        renderClients();
+      }
+    }
 
     // Fonction pour formater les nombres
     function formatNumber(num) {
-      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+      return new Intl.NumberFormat('fr-FR').format(num);
     }
 
     // Fonction pour formater les dates
@@ -806,7 +809,7 @@
         card.className = 'client-card';
         card.innerHTML = `
           <div class="client-header">
-            <img src="${client.avatar}" alt="${client.nom}" class="client-avatar">
+            <img src="${client.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'}" alt="${client.nom}" class="client-avatar">
             <div class="client-info">
               <h4>${client.nom}</h4>
               <p>${client.email}</p>
@@ -815,7 +818,7 @@
           </div>
           <div class="client-badges">
             <span class="badge ${client.statut}">${getStatusText(client.statut)}</span>
-            <span class="badge">${client.commandes} commandes</span>
+            <span class="badge">${client.commandes || 0} commandes</span>
           </div>
           <div class="client-actions">
             <button class="btn btn-secondary" onclick="editClient(${client.id})">
@@ -866,7 +869,7 @@
           sortedClients.sort((a, b) => new Date(a.dateInscription) - new Date(b.dateInscription));
           break;
         case 'commandes':
-          sortedClients.sort((a, b) => b.commandes - a.commandes);
+          sortedClients.sort((a, b) => (b.commandes || 0) - (a.commandes || 0));
           break;
       }
 
@@ -891,6 +894,8 @@
     // Fonction de déconnexion
     function logout() {
       if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
         window.location.href = 'page1.html';
       }
     }
@@ -912,27 +917,27 @@
     function viewClient(id) {
       const client = clientsData.find(c => c.id === id);
       if (client) {
-        alert(`Détails du client ${client.nom}\nEmail: ${client.email}\nTéléphone: ${client.telephone}\nAdresse: ${client.adresse}\nStatut: ${getStatusText(client.statut)}\nCommandes: ${client.commandes}`);
+        alert(`Détails du client ${client.nom}\nEmail: ${client.email}\nTéléphone: ${client.telephone}\nAdresse: ${client.adresse}\nStatut: ${getStatusText(client.statut)}\nCommandes: ${client.commandes || 0}`);
       }
     }
 
-    function deleteClient(id) {
+    async function deleteClient(id) {
       if (confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
-        const index = clientsData.findIndex(c => c.id === id);
-        if (index > -1) {
-          clientsData.splice(index, 1);
-          renderClients();
-          updateStats();
+        const success = await apiCall(`/clients/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (success !== null) {
+          await loadClients();
         }
       }
     }
 
     // Gestion du formulaire
-    document.getElementById('clientForm').addEventListener('submit', function(e) {
+    document.getElementById('clientForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const newClient = {
-        id: clientsData.length + 1,
+      const clientData = {
         nom: document.getElementById('clientNom').value,
         email: document.getElementById('clientEmail').value,
         telephone: document.getElementById('clientTel').value,
@@ -943,18 +948,23 @@
         avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
       };
 
-      clientsData.push(newClient);
-      renderClients();
-      updateStats();
-      hideModal('addClientModal');
-      document.getElementById('clientForm').reset();
-      document.getElementById('modalTitle').textContent = 'Nouveau Client';
+      const success = await apiCall('/clients', {
+        method: 'POST',
+        body: JSON.stringify(clientData)
+      });
+
+      if (success !== null) {
+        await loadClients();
+        hideModal('addClientModal');
+        document.getElementById('clientForm').reset();
+        document.getElementById('modalTitle').textContent = 'Nouveau Client';
+      }
     });
 
     // Initialisation
-    function initClients() {
-      updateStats();
-      renderClients();
+    async function initClients() {
+      checkAuth();
+      await loadClients();
     }
 
     // Chargement au démarrage

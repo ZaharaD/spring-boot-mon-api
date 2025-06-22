@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Ordexa - Système de Gestion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    
+    .container {
+      text-align: center;
+      max-width: 600px;
+      padding: 2rem;
+    }
+    
+    .logo {
+      font-size: 3rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+    
+    .logo i {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 1rem;
+      border-radius: 50%;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+    
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+    
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    .btn.primary {
+      background: #16a34a;
+      border-color: #16a34a;
+    }
+    
+    .btn.primary:hover {
+      background: #15803d;
+    }
+    
+    .features {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .feature {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .feature i {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #16a34a;
+    }
+    
+    .feature h3 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .credentials {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-top: 2rem;
+      backdrop-filter: blur(10px);
+    }
+    
+    .credentials h3 {
+      margin-bottom: 1rem;
+    }
+    
+    .credential-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <i class="fa-solid fa-chart-line"></i>
+      <span>Ordexa</span>
+    </div>
+    
+    <h1>Système de Gestion Complet</h1>
+    <p>Gestion des clients, produits, commandes et statistiques avec interface moderne</p>
+    
+    <div class="buttons">
+      <a href="page1.html" class="btn primary">
+        <i class="fa-solid fa-sign-in-alt"></i>
+        Commencer
+      </a>
+    </div>
+    
+    <div class="credentials">
+      <h3>🔑 Accès Administrateur</h3>
+      <div class="credential-item">
+        <span>Email :</span>
+        <strong>admin@ordexa.ml</strong>
+      </div>
+      <div class="credential-item">
+        <span>Mot de passe :</span>
+        <strong>admin123</strong>
+      </div>
+    </div>
+    
+    <div class="features">
+      <div class="feature">
+        <i class="fa-solid fa-users"></i>
+        <h3>Gestion Clients</h3>
+        <p>CRUD complet avec noms maliens</p>
+      </div>
+      
+      <div class="feature">
+        <i class="fa-solid fa-box"></i>
+        <h3>Gestion Produits</h3>
+        <p>Stock et prix en temps réel</p>
+      </div>
+      
+      <div class="feature">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <h3>Gestion Commandes</h3>
+        <p>Filtrage, export CSV, modals</p>
+      </div>
+      
+      <div class="feature">
+        <i class="fa-solid fa-chart-bar"></i>
+        <h3>Statistiques</h3>
+        <p>Graphiques interactifs</p>
+      </div>
+      
+      <div class="feature">
+        <i class="fa-solid fa-gear"></i>
+        <h3>Paramètres</h3>
+        <p>Gestion utilisateurs complète</p>
+      </div>
+      
+      <div class="feature">
+        <i class="fa-solid fa-mobile-alt"></i>
+        <h3>Responsive</h3>
+        <p>Adapté mobile et tablette</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html> 

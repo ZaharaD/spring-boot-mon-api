@@ -522,6 +522,93 @@
         opacity: 1;
       }
     }
+
+    /* Clients Table */
+    .clients-table-container {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .clients-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .clients-table th, 
+    .clients-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .clients-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .clients-table tr:hover {
+      background-color: #f9fafb;
+    }
+
+    .client-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .client-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+
+    .client-name strong {
+      display: block;
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+
+    .client-name span {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    
+    .client-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .client-actions .btn {
+        padding: 0.4rem 0.8rem;
+    }
+
+    td a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    td a:hover {
+        text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -585,16 +672,10 @@
           Gestion des Clients
         </h1>
         <div style="display: flex; gap: 1rem;">
-          <a href="page2.html" class="btn">
-            <i class="fa-solid fa-home"></i>
-            Tableau de bord
-          </a>
-          <div class="header-actions">
-            <button onclick="showAddClientModal()" class="btn btn-primary">
-              <i class="fa-solid fa-plus"></i>
-              Nouveau Client
-            </button>
-          </div>
+           <button class="btn" onclick="showModal('addClientModal')">
+            <i class="fa-solid fa-plus"></i>
+            Nouveau client
+          </button>
         </div>
       </div>
 
@@ -608,32 +689,13 @@
           <div class="value" id="totalClients">0</div>
           <div class="label">Nombre total de clients</div>
         </div>
-        
-        <div class="stat-card">
-          <h3>
-            <i class="fa-solid fa-crown"></i>
-            Clients VIP
-          </h3>
-          <div class="value" id="vipClients">0</div>
-          <div class="label">Clients premium</div>
-        </div>
-        
         <div class="stat-card">
           <h3>
             <i class="fa-solid fa-user-plus"></i>
-            Nouveaux Clients
+            Nouveaux Clients (30j)
           </h3>
           <div class="value" id="newClients">0</div>
-          <div class="label">Ce mois</div>
-        </div>
-        
-        <div class="stat-card">
-          <h3>
-            <i class="fa-solid fa-chart-line"></i>
-            Croissance
-          </h3>
-          <div class="value" id="growthRate">+12%</div>
-          <div class="label">Taux de croissance</div>
+          <div class="label">Clients inscrits récemment</div>
         </div>
       </div>
 
@@ -645,20 +707,10 @@
         </h3>
         <div class="filters-content">
           <div class="filter-group">
-            <label for="statusFilter">Statut:</label>
-            <select id="statusFilter" onchange="filterClients()">
-              <option value="">Tous</option>
-              <option value="actif">Actif</option>
-              <option value="vip">VIP</option>
-              <option value="premium">Premium</option>
-              <option value="nouveau">Nouveau</option>
-            </select>
-          </div>
-          <div class="filter-group">
             <label for="searchInput">Rechercher:</label>
             <input type="text" id="searchInput" placeholder="Nom, email, téléphone..." onkeyup="filterClients()">
           </div>
-          <div class="filter-group">
+           <div class="filter-group">
             <button class="btn btn-secondary" onclick="exportToCSV()">
               <i class="fa-solid fa-download"></i>
               Exporter CSV
@@ -667,9 +719,24 @@
         </div>
       </div>
 
-      <!-- Clients Grid -->
-      <div class="clients-grid" id="clientsGrid">
-        <!-- Les clients seront chargés ici -->
+      <!-- Clients Table -->
+      <div class="clients-table-container">
+        <table class="clients-table">
+          <thead>
+            <tr>
+              <th>Nom du Client</th>
+              <th>Contact</th>
+              <th>Date d'inscription</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="clientsTableBody">
+            <!-- Les clients seront chargés ici -->
+          </tbody>
+        </table>
+        <div id="no-clients-message" style="text-align:center;color:#666;padding:2rem;display:none;">
+          Aucun client trouvé. Essayez de changer les filtres ou de créer un nouveau client.
+        </div>
       </div>
     </div>
   </div>
@@ -683,33 +750,24 @@
       </div>
       <form id="clientForm">
         <div class="form-group">
-          <label for="clientNom">Nom</label>
+          <label for="clientPrenom">Prénom *</label>
+          <input type="text" id="clientPrenom" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="clientNom">Nom *</label>
           <input type="text" id="clientNom" class="form-control" required>
         </div>
         <div class="form-group">
-          <label for="clientPrenom">Prénom</label>
-          <input type="text" id="clientPrenom" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="clientEmail">Email</label>
+          <label for="clientEmail">Email *</label>
           <input type="email" id="clientEmail" class="form-control" required>
         </div>
         <div class="form-group">
           <label for="clientTel">Téléphone</label>
-          <input type="tel" id="clientTel" class="form-control" required>
+          <input type="tel" id="clientTel" class="form-control">
         </div>
-        <div class="form-group">
-          <label for="clientAdresse">Adresse</label>
-          <textarea id="clientAdresse" class="form-control" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="clientStatut">Statut</label>
-          <select id="clientStatut" class="form-control">
-            <option value="actif">Actif</option>
-            <option value="vip">VIP</option>
-            <option value="premium">Premium</option>
-            <option value="nouveau">Nouveau</option>
-          </select>
+         <div class="form-group">
+          <label for="clientInscription">Date d'inscription</label>
+          <input type="date" id="clientInscription" class="form-control">
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="hideModal('addClientModal')">Annuler</button>
@@ -720,455 +778,263 @@
   </div>
 
   <script>
-    // Configuration locale (sans API)
+    // Configuration de l'API
+    const API_BASE_URL = 'http://localhost:8080/api';
     let clientsData = [];
     let currentUser = null;
+    let editingClientId = null;
 
-    // Données de test pour les clients
-    const initialClientsData = [
-      {
-        id: 1,
-        nom: "Diarra",
-        prenom: "Fanta",
-        email: "fanta.diarra@email.ml",
-        telephone: "+223 76 12 34 56",
-        adresse: "Bamako, Mali",
-        dateInscription: "2024-01-15",
-        statut: "actif",
-        commandes: 5,
-        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 2,
-        nom: "Keita",
-        prenom: "Moussa",
-        email: "moussa.keita@email.ml",
-        telephone: "+223 76 23 45 67",
-        adresse: "Sikasso, Mali",
-        dateInscription: "2024-02-20",
-        statut: "vip",
-        commandes: 12,
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 3,
-        nom: "Traoré",
-        prenom: "Aminata",
-        email: "aminata.traore@email.ml",
-        telephone: "+223 76 34 56 78",
-        adresse: "Ségou, Mali",
-        dateInscription: "2024-03-10",
-        statut: "actif",
-        commandes: 3,
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 4,
-        nom: "Koné",
-        prenom: "Fatoumata",
-        email: "fatoumata.kone@email.ml",
-        telephone: "+223 76 45 67 89",
-        adresse: "Mopti, Mali",
-        dateInscription: "2024-04-05",
-        statut: "premium",
-        commandes: 8,
-        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 5,
-        nom: "Coulibaly",
-        prenom: "Ousmane",
-        email: "ousmane.coulibaly@email.ml",
-        telephone: "+223 76 56 78 90",
-        adresse: "Kayes, Mali",
-        dateInscription: "2024-05-12",
-        statut: "actif",
-        commandes: 2,
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 6,
-        nom: "Sangaré",
-        prenom: "Mariam",
-        email: "mariam.sangare@email.ml",
-        telephone: "+223 76 67 89 01",
-        adresse: "Tombouctou, Mali",
-        dateInscription: "2024-06-01",
-        statut: "nouveau",
-        commandes: 1,
-        avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 7,
-        nom: "Diallo",
-        prenom: "Boubacar",
-        email: "boubacar.diallo@email.ml",
-        telephone: "+223 76 78 90 12",
-        adresse: "Gao, Mali",
-        dateInscription: "2024-06-15",
-        statut: "actif",
-        commandes: 4,
-        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-      },
-      {
-        id: 8,
-        nom: "Ballo",
-        prenom: "Aïcha",
-        email: "aicha.ballo@email.ml",
-        telephone: "+223 76 89 01 23",
-        adresse: "Koulikoro, Mali",
-        dateInscription: "2024-06-20",
-        statut: "nouveau",
-        commandes: 0,
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
-      }
-    ];
-
-    // Vérification de l'authentification locale
+    // Vérification de l'authentification
     function checkAuth() {
       const token = localStorage.getItem('jwtToken');
       const user = localStorage.getItem('user');
-      
       if (!token || !user) {
-        // Créer un utilisateur par défaut si aucun n'existe
-        if (!user) {
-          const defaultUser = {
-            nom: "Mohamed Koné",
-            email: "admin@ordexa.ml",
-            role: "admin"
-          };
-          localStorage.setItem('user', JSON.stringify(defaultUser));
-          localStorage.setItem('jwtToken', 'demo-token-123');
-        }
+        window.location.href = 'page1.html';
+        return;
       }
-      
       try {
-        currentUser = JSON.parse(localStorage.getItem('user'));
+        currentUser = JSON.parse(user);
       } catch (e) {
-        const defaultUser = {
-          nom: "Mohamed Koné",
-          email: "admin@ordexa.ml",
-          role: "admin"
-        };
-        localStorage.setItem('user', JSON.stringify(defaultUser));
-        localStorage.setItem('jwtToken', 'demo-token-123');
-        currentUser = defaultUser;
-      }
-    }
-
-    // Fonctions de gestion locale des données
-    function loadClients() {
-      console.log('Chargement des clients depuis localStorage...');
-      const stored = localStorage.getItem('clientsData');
-      
-      if (!stored) {
-        console.log('Aucune donnée trouvée, initialisation avec les données de test...');
-        clientsData = [...initialClientsData];
-        localStorage.setItem('clientsData', JSON.stringify(clientsData));
-      } else {
-        try {
-          clientsData = JSON.parse(stored);
-          console.log('Données clients chargées:', clientsData.length, 'clients');
-        } catch (e) {
-          console.error('Erreur lors du chargement des clients:', e);
-          clientsData = [...initialClientsData];
-          localStorage.setItem('clientsData', JSON.stringify(clientsData));
-        }
-      }
-      
-      renderClients();
-    }
-
-    function saveClients() {
-      localStorage.setItem('clientsData', JSON.stringify(clientsData));
-      console.log('Clients sauvegardés:', clientsData.length, 'clients');
-    }
-
-    function addClient(client) {
-      const newId = Math.max(...clientsData.map(c => c.id), 0) + 1;
-      const newClient = {
-        ...client,
-        id: newId,
-        dateInscription: new Date().toISOString().split('T')[0],
-        commandes: 0,
-        avatar: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000)}?w=150&h=150&fit=crop&crop=face`
-      };
-      
-      clientsData.push(newClient);
-      saveClients();
-      renderClients();
-      showNotification('Client ajouté avec succès!', 'success');
-    }
-
-    function updateClient(id, updatedClient) {
-      const index = clientsData.findIndex(c => c.id === id);
-      if (index !== -1) {
-        clientsData[index] = { ...clientsData[index], ...updatedClient };
-        saveClients();
-        renderClients();
-        showNotification('Client modifié avec succès!', 'success');
-      }
-    }
-
-    function deleteClient(id) {
-      clientsData = clientsData.filter(c => c.id !== id);
-      saveClients();
-      renderClients();
-      showNotification('Client supprimé avec succès!', 'success');
-    }
-
-    function resetToTestData() {
-      clientsData = [...initialClientsData];
-      saveClients();
-      renderClients();
-      showNotification('Données de test restaurées!', 'success');
-    }
-
-    // Fonction pour formater les nombres
-    function formatNumber(num) {
-      return new Intl.NumberFormat('fr-FR').format(num);
-    }
-
-    // Fonction pour formater les dates
-    function formatDate(dateStr) {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('fr-FR');
-    }
-
-    // Fonction pour obtenir le statut en français
-    function getStatusText(status) {
-      const statusMap = {
-        'vip': 'VIP',
-        'nouveau': 'Nouveau',
-        'premium': 'Premium',
-        'normal': 'Normal'
-      };
-      return statusMap[status] || status;
-    }
-
-    // Mise à jour des statistiques
-    function updateStats() {
-      const totalClients = clientsData.length;
-      const vipClients = clientsData.filter(c => c.statut === 'vip').length;
-      const newClients = clientsData.filter(c => {
-        const date = new Date(c.dateInscription);
-        const now = new Date();
-        const diffTime = Math.abs(now - date);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays <= 30;
-      }).length;
-
-      document.getElementById('totalClients').textContent = formatNumber(totalClients);
-      document.getElementById('vipClients').textContent = formatNumber(vipClients);
-      document.getElementById('newClients').textContent = formatNumber(newClients);
-    }
-
-    // Affichage des clients
-    function renderClients(clients = clientsData) {
-      const grid = document.getElementById('clientsGrid');
-      grid.innerHTML = '';
-
-      clients.forEach(client => {
-        const card = document.createElement('div');
-        card.className = 'client-card';
-        card.innerHTML = `
-          <div class="client-header">
-            <img src="${client.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'}" alt="${client.nom}" class="client-avatar">
-            <div class="client-info">
-              <h4>${client.nom} ${client.prenom || ''}</h4>
-              <p>${client.email}</p>
-              <p>${client.telephone}</p>
-            </div>
-          </div>
-          <div class="client-badges">
-            <span class="badge ${client.statut}">${getStatusText(client.statut)}</span>
-            <span class="badge">${client.commandes || 0} commandes</span>
-          </div>
-          <div class="client-actions">
-            <button class="btn btn-secondary" onclick="editClient(${client.id})">
-              <i class="fa-solid fa-edit"></i>
-              Modifier
-            </button>
-            <button class="btn btn-primary" onclick="viewClient(${client.id})">
-              <i class="fa-solid fa-eye"></i>
-              Voir
-            </button>
-            <button class="btn btn-danger" onclick="deleteClient(${client.id})">
-              <i class="fa-solid fa-trash"></i>
-              Supprimer
-            </button>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    // Filtrage des clients
-    function filterClients() {
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const statusFilter = document.getElementById('statusFilter').value;
-
-      let filteredClients = clientsData.filter(client => {
-        const matchesSearch = client.nom.toLowerCase().includes(searchTerm) ||
-                            (client.prenom || '').toLowerCase().includes(searchTerm) ||
-                            client.email.toLowerCase().includes(searchTerm) ||
-                            client.telephone.includes(searchTerm);
-        const matchesStatus = !statusFilter || client.statut === statusFilter;
-        
-        return matchesSearch && matchesStatus;
-      });
-
-      renderClients(filteredClients);
-    }
-
-    // Tri des clients
-    function sortClients() {
-      const sortBy = document.getElementById('sortBy').value;
-      let sortedClients = [...clientsData];
-
-      switch(sortBy) {
-        case 'nom':
-          sortedClients.sort((a, b) => a.nom.localeCompare(b.nom));
-          break;
-        case 'date':
-          sortedClients.sort((a, b) => new Date(a.dateInscription) - new Date(b.dateInscription));
-          break;
-        case 'commandes':
-          sortedClients.sort((a, b) => (b.commandes || 0) - (a.commandes || 0));
-          break;
-      }
-
-      renderClients(sortedClients);
-    }
-
-    // Fonctions modales
-    function showModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
-    }
-
-    function hideModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
-    }
-
-    // Fonction pour basculer la sidebar sur mobile
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('active');
-    }
-
-    // Fonction de déconnexion
-    function logout() {
-      if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
         localStorage.removeItem('jwtToken');
         localStorage.removeItem('user');
         window.location.href = 'page1.html';
       }
     }
 
-    // Fonctions CRUD
+    // Fonction pour faire des appels API avec JWT
+    async function apiCall(endpoint, options = {}) {
+      const token = localStorage.getItem('jwtToken');
+      const defaultOptions = {
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+      };
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          ...defaultOptions, ...options, headers: { ...defaultOptions.headers, ...options.headers }
+        });
+        if (response.status === 401) {
+          logout(false); return null;
+        }
+        if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+        // Si la réponse DELETE est OK mais vide (204 No Content), retourner un objet succès
+        if (response.status === 204) {
+          return { success: true };
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('API call failed:', error);
+        return null;
+      }
+    }
+
+    // Charger les clients
+    async function loadClients() {
+      const clients = await apiCall('/clients');
+      if (clients) {
+        clientsData = clients;
+      } else {
+        // MOCK DATA
+        console.log("API a échoué, chargement des données de test pour les clients.");
+        clientsData = [
+          { id: 1, nom: 'Kone', prenom: 'Mohamed', email: 'mohamed.kone@email.com', tel: '0700000001', inscription: '2024-01-10' },
+          { id: 2, nom: 'Traore', prenom: 'Awa', email: 'awa.traore@email.com', tel: '0700000002', inscription: '2024-02-15' },
+          { id: 3, nom: 'Coulibaly', prenom: 'Issa', email: 'issa.coulibaly@email.com', tel: '0700000003', inscription: '2024-03-20' },
+          { id: 4, nom: 'Diarra', prenom: 'Fatim', email: 'fatim.diarra@email.com', tel: '0700000004', inscription: '2024-04-01' },
+          { id: 5, nom: 'Sissoko', prenom: 'Moussa', email: 'moussa.sissoko@email.com', tel: '0700000005', inscription: '2024-04-05' },
+          { id: 6, nom: 'Keita', prenom: 'Ousmane', email: 'ousmane.keita@email.com', tel: '0700000006', inscription: '2024-05-10' },
+          { id: 7, nom: 'Ballo', prenom: 'Aicha', email: 'aicha.ballo@email.com', tel: '0700000007', inscription: '2024-05-12' },
+          { id: 8, nom: 'Sangaré', prenom: 'Mariam', email: 'mariam.sangare@email.com', tel: '0700000008', inscription: '2024-05-20' },
+          { id: 9, nom: 'Diallo', prenom: 'Boubacar', email: 'boubacar.diallo@email.com', tel: '0700000009', inscription: '2024-06-02' },
+          { id: 10, nom: 'Doumbia', prenom: 'Sekou', email: 'sekou.doumbia@email.com', tel: '0700000010', inscription: '2024-06-11' }
+        ];
+      }
+      updateStats();
+      filterClients();
+    }
+
+    // Mise à jour des stats
+    function updateStats() {
+      document.getElementById('totalClients').textContent = clientsData.length;
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const newClients = clientsData.filter(c => c.inscription && new Date(c.inscription) > thirtyDaysAgo).length;
+      document.getElementById('newClients').textContent = newClients;
+    }
+
+    // Affichage et filtrage
+    function filterClients() {
+      const tableBody = document.getElementById('clientsTableBody');
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const noClientsMessage = document.getElementById('no-clients-message');
+
+      const filteredClients = clientsData.filter(client => 
+        (client.nom.toLowerCase().includes(searchTerm) ||
+         client.prenom.toLowerCase().includes(searchTerm) ||
+         client.email.toLowerCase().includes(searchTerm) ||
+         (client.tel || '').toLowerCase().includes(searchTerm))
+      );
+
+      tableBody.innerHTML = '';
+      if (filteredClients.length === 0) {
+        noClientsMessage.style.display = 'block';
+        tableBody.parentElement.style.display = 'none';
+        return;
+      }
+      
+      noClientsMessage.style.display = 'none';
+      tableBody.parentElement.style.display = '';
+
+      filteredClients.forEach(client => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div class="client-info">
+              <div class="client-avatar">${client.prenom.charAt(0)}${client.nom.charAt(0)}</div>
+              <div class="client-name">
+                <strong>${client.prenom} ${client.nom}</strong>
+                <span>ID: CLI-${String(client.id).padStart(4, '0')}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <a href="mailto:${client.email}">${client.email}</a><br>
+            <span>${client.tel || 'Non renseigné'}</span>
+          </td>
+          <td>${formatDate(client.inscription)}</td>
+          <td>
+            <div class="client-actions">
+              <button onclick="editClient(${client.id})" class="btn btn-primary"><i class="fa-solid fa-edit"></i> Modifier</button>
+              <button onclick="deleteClient(${client.id})" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Supprimer</button>
+            </div>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    // CRUD
     function editClient(id) {
       const client = clientsData.find(c => c.id === id);
       if (client) {
+        editingClientId = id;
         document.getElementById('modalTitle').textContent = 'Modifier Client';
-        document.getElementById('clientNom').value = client.nom;
         document.getElementById('clientPrenom').value = client.prenom;
+        document.getElementById('clientNom').value = client.nom;
         document.getElementById('clientEmail').value = client.email;
-        document.getElementById('clientTel').value = client.telephone;
-        document.getElementById('clientAdresse').value = client.adresse;
-        document.getElementById('clientStatut').value = client.statut;
+        document.getElementById('clientTel').value = client.tel || '';
+        document.getElementById('clientInscription').value = client.inscription;
         showModal('addClientModal');
       }
     }
 
-    function viewClient(id) {
-      const client = clientsData.find(c => c.id === id);
-      if (client) {
-        alert(`Détails du client ${client.nom} ${client.prenom || ''}\nEmail: ${client.email}\nTéléphone: ${client.telephone}\nAdresse: ${client.adresse}\nStatut: ${getStatusText(client.statut)}\nCommandes: ${client.commandes || 0}\nDate d'inscription: ${formatDate(client.dateInscription)}`);
+    async function deleteClient(id) {
+      if (confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
+        const result = await apiCall(`/clients/${id}`, { method: 'DELETE' });
+        // Si l'API échoue, on supprime quand même en local pour la démo
+        if (result === null) {
+            clientsData = clientsData.filter(c => c.id !== id);
+            updateStats();
+            filterClients();
+        } else {
+            await loadClients();
+        }
       }
     }
 
-    // Gestion du formulaire
-    document.getElementById('clientForm').addEventListener('submit', function(e) {
+    // Formulaire
+    document.getElementById('clientForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      
       const clientData = {
-        nom: document.getElementById('clientNom').value,
         prenom: document.getElementById('clientPrenom').value,
+        nom: document.getElementById('clientNom').value,
         email: document.getElementById('clientEmail').value,
-        telephone: document.getElementById('clientTel').value,
-        adresse: document.getElementById('clientAdresse').value,
-        statut: document.getElementById('clientStatut').value
+        tel: document.getElementById('clientTel').value,
+        inscription: document.getElementById('clientInscription').value || new Date().toISOString().split('T')[0]
       };
 
-      addClient(clientData);
+      let result;
+      if (editingClientId) {
+        result = await apiCall(`/clients/${editingClientId}`, { method: 'PUT', body: JSON.stringify(clientData) });
+      } else {
+        result = await apiCall('/clients', { method: 'POST', body: JSON.stringify(clientData) });
+      }
+
+      // Si l'API échoue, on ajoute/modifie en local pour la démo
+      if (result === null) {
+          if (editingClientId) {
+              const index = clientsData.findIndex(c => c.id === editingClientId);
+              if (index !== -1) {
+                  clientsData[index] = { ...clientsData[index], ...clientData };
+              }
+          } else {
+              // Création d'un ID temporaire
+              clientData.id = new Date().getTime();
+              clientsData.push(clientData);
+          }
+          updateStats();
+          filterClients();
+      } else {
+          await loadClients();
+      }
       hideModal('addClientModal');
-      document.getElementById('clientForm').reset();
     });
-
-    // Fonction pour afficher une notification
-    function showNotification(message, type = 'success') {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.textContent = message;
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#10b981' : '#ef4444'};
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-      `;
-      
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.remove();
-      }, 3000);
+    
+    // Modales
+    function showModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
     }
 
-    // Initialisation
-    function initClients() {
-      checkAuth();
-      
-      // Forcer l'affichage des données de test
-      clientsData = [...initialClientsData];
-      localStorage.setItem('clientsData', JSON.stringify(clientsData));
-      
-      updateStats();
-      renderClients();
-      console.log('Clients forcés:', clientsData.length);
+    function hideModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+      document.getElementById('clientForm').reset();
+      document.getElementById('modalTitle').textContent = 'Nouveau Client';
+      editingClientId = null;
+    }
+    
+    // Déconnexion
+    function logout(confirmLogout = true) {
+      const doLogout = () => {
+        localStorage.removeItem('jwtToken');
+        localStorage.removeItem('user');
+        window.location.href = 'page1.html';
+      };
+      if (confirmLogout) {
+        if(confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) doLogout();
+      } else {
+        doLogout();
+      }
     }
 
-    // Chargement au démarrage
-    document.addEventListener('DOMContentLoaded', initClients);
-
-    // Export CSV
+    // Helpers
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString('fr-FR', options);
+    }
+    
     function exportToCSV() {
-      const csvContent = "data:text/csv;charset=utf-8," 
-        + "ID,Nom,Prénom,Email,Téléphone,Adresse,Statut,Date d'inscription,Commandes\n"
+      const headers = "ID,Prénom,Nom,Email,Téléphone,Date d'inscription";
+      const csvContent = "data:text/csv;charset=utf-8," + headers + "\n"
         + clientsData.map(c => 
-            `${c.id},"${c.nom}","${c.prenom || ''}","${c.email}","${c.telephone}","${c.adresse}","${c.statut}","${c.dateInscription}",${c.commandes || 0}`
+            `${c.id},"${c.prenom}","${c.nom}","${c.email}","${c.tel || ''}","${c.inscription}"`
           ).join("\n");
-      
-      const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
+      link.setAttribute("href", encodeURI(csvContent));
       link.setAttribute("download", `clients_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
-    // Fonction pour réinitialiser les données
-    function resetData() {
-      if (confirm('Voulez-vous réinitialiser toutes les données avec les données de test ?')) {
-        resetToTestData();
+    // Initialisation
+    function init() {
+      checkAuth();
+      if (currentUser) {
+        document.getElementById('user-name').textContent = `${currentUser.prenom} ${currentUser.nom}`;
       }
+      loadClients();
     }
+
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html> 
